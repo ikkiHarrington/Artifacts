@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>タスク管理</title>
+<style>
+  :root {
+    --bg: #f5f6fa; --card: #fff; --text: #1f2430; --muted: #7a8194;
+    --border: #e3e6ee; --accent: #4f6ef7; --danger: #e5484d;
+    --high: #e5484d; --mid: #f5a524; --low: #30a46c;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #14161c; --card: #1d2029; --text: #e8eaf0; --muted: #8b93a7; --border: #2b2f3b; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, "Hiragino Sans", "Yu Gothic UI", sans-serif; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .stats { color: var(--muted); font-size: .9rem; margin-bottom: 16px; }
+  .progress { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 20px; }
+  .progress > div { height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+  form { background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px; display: grid; grid-template-columns: 1fr auto auto auto; gap: 8px; }
+  input, select, button { font: inherit; color: inherit; }
+  input[type=text], input[type=date], input[type=search], select {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+  button { cursor: pointer; border: 0; border-radius: 8px; padding: 8px 14px; background: var(--accent); color: #fff; }
+  button.ghost { background: transparent; color: var(--muted); padding: 4px 8px; }
+  button.ghost:hover { color: var(--text); }
+  button.del:hover { color: var(--danger); }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 12px; align-items: center; }
+  .toolbar input[type=search] { flex: 1; min-width: 140px; }
+  .tabs { display: flex; gap: 4px; }
+  .tabs button { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .tabs button.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  li { background: var(--card); border: 1px solid var(--border); border-left: 4px solid var(--mid);
+    border-radius: 10px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+  li.p-high { border-left-color: var(--high); }
+  li.p-low { border-left-color: var(--low); }
+  li input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); flex: none; }
+  .body { flex: 1; min-width: 0; }
+  .title { overflow-wrap: anywhere; }
+  li.done .title { text-decoration: line-through; color: var(--muted); }
+  .meta { font-size: .8rem; color: var(--muted); margin-top: 2px; }
+  .meta .over { color: var(--danger); font-weight: 600; }
+  .empty { text-align: center; color: var(--muted); padding: 32px 0; }
+  .foot { margin-top: 16px; text-align: right; }
+  @media (max-width: 520px) { form { grid-template-columns: 1fr 1fr; } form input[type=text] { grid-column: 1 / -1; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>タスク管理</h1>
+  <div class="stats" id="stats"></div>
+  <div class="progress"><div id="bar"></div></div>
+
+  <form id="form">
+    <input type="text" id="title" placeholder="新しいタスクを入力…" required maxlength="200" autofocus>
+    <input type="date" id="due" aria-label="期限">
+    <select id="prio" aria-label="優先度">
+      <option value="high">高</option>
+      <option value="mid" selected>中</option>
+      <option value="low">低</option>
+    </select>
+    <button type="submit">追加</button>
+  </form>
+
+  <div class="toolbar">
+    <div class="tabs" id="tabs">
+      <button data-f="all" class="on">すべて</button>
+      <button data-f="active">未完了</button>
+      <button data-f="done">完了</button>
+    </div>
+    <input type="search" id="q" placeholder="検索">
+    <select id="sort" aria-label="並び替え">
+      <option value="created">作成順</option>
+      <option value="due">期限順</option>
+      <option value="prio">優先度順</option>
+    </select>
+  </div>
+
+  <ul id="list"></ul>
+  <div class="foot"><button class="ghost del" id="clear">完了済みを削除</button></div>
+</div>
+
+<script>
+const KEY = 'taskapp.v1';
+const PRIO = { high: 0, mid: 1, low: 2 };
+const PRIO_LABEL = { high: '高', mid: '中', low: '低' };
+let tasks = [];
+try { tasks = JSON.parse(localStorage.getItem(KEY)) || []; } catch {}
+let filter = 'all';
+
+const $ = id => document.getElementById(id);
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(tasks)); } catch {} };
+const today = () => new Date().toLocaleDateString('sv'); // YYYY-MM-DD
+
+function render() {
+  const q = $('q').value.trim().toLowerCase();
+  const sort = $('sort').value;
+  let items = tasks.filter(t =>
+    (filter === 'all' || (filter === 'done') === t.done) &&
+    t.title.toLowerCase().includes(q));
+  items.sort((a, b) => {
+    if (sort === 'due') return (a.due || '9999').localeCompare(b.due || '9999');
+    if (sort === 'prio') return PRIO[a.prio] - PRIO[b.prio];
+    return b.created - a.created;
+  });
+
+  const list = $('list');
+  list.textContent = '';
+  if (!items.length) {
+    const d = document.createElement('div');
+    d.className = 'empty';
+    d.textContent = 'タスクがありません';
+    list.appendChild(d);
+  }
+  for (const t of items) {
+    const li = document.createElement('li');
+    li.className = `p-${t.prio}` + (t.done ? ' done' : '');
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = t.done;
+    cb.onchange = () => { t.done = cb.checked; save(); render(); };
+
+    const body = document.createElement('div');
+    body.className = 'body';
+    const title = document.createElement('div');
+    title.className = 'title'; title.textContent = t.title;
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.append(`優先度: ${PRIO_LABEL[t.prio]}`);
+    if (t.due) {
+      const span = document.createElement('span');
+      const over = !t.done && t.due < today();
+      span.textContent = ` ・ 期限: ${t.due}${over ? '（期限切れ）' : ''}`;
+      if (over) span.className = 'over';
+      meta.append(span);
+    }
+    body.append(title, meta);
+
+    const edit = document.createElement('button');
+    edit.className = 'ghost'; edit.textContent = '編集';
+    edit.onclick = () => {
+      const v = prompt('タスクを編集', t.title);
+      if (v && v.trim()) { t.title = v.trim(); save(); render(); }
+    };
+    const del = document.createElement('button');
+    del.className = 'ghost del'; del.textContent = '削除';
+    del.onclick = () => { tasks = tasks.filter(x => x !== t); save(); render(); };
+
+    li.append(cb, body, edit, del);
+    list.appendChild(li);
+  }
+
+  const done = tasks.filter(t => t.done).length;
+  $('stats').textContent = `全${tasks.length}件 ・ 完了${done}件 ・ 残り${tasks.length - done}件`;
+  $('bar').style.width = tasks.length ? (done / tasks.length * 100) + '%' : '0';
+}
+
+$('form').onsubmit = e => {
+  e.preventDefault();
+  const title = $('title').value.trim();
+  if (!title) return;
+  tasks.push({ id: crypto.randomUUID(), title, due: $('due').value, prio: $('prio').value, done: false, created: Date.now() });
+  save();
+  $('title').value = ''; $('due').value = '';
+  render();
+  $('title').focus();
+};
+$('tabs').onclick = e => {
+  if (!e.target.dataset.f) return;
+  filter = e.target.dataset.f;
+  [...$('tabs').children].forEach(b => b.classList.toggle('on', b === e.target));
+  render();
+};
+$('q').oninput = $('sort').onchange = render;
+$('clear').onclick = () => {
+  if (tasks.some(t => t.done) && confirm('完了済みのタスクをすべて削除しますか？')) {
+    tasks = tasks.filter(t => !t.done); save(); render();
+  }
+};
+render();
+</script>
+</body>
+</html>
