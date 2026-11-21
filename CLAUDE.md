@@ -34,6 +34,21 @@ npx vitest run -t "テスト名"                          # 名前指定で単�
 - `src/components/` — クライアントコンポーネント(`"use client"`)。`Board` がフックと絞り込み条件(永続化しない `useState`)を保持し、絞り込み後の `tasks` / `onDropTask` を下に渡す。`TaskFilters` は検索・絞り込みの入力。`Column` は HTML5 ドラッグ&ドロップのドロップ先。`TaskCard` はドラッグ元で、`Column` と共有する dataTransfer のキー `DRAG_MIME` をエクスポートする。`TaskForm` は `onAdd` を呼ぶ。
 - `src/app/` — App Router のエントリ(`layout.tsx`、`page.tsx`)。`Board` を描画する。
 
+## 成果物のコミット・push
+
+成果物ができたら、ユーザーに頼まれなくてもコミットして push する。確認は不要(この項目が常時の許可にあたる)。
+
+- 対象:Claude が作成・更新した成果物(コード、ドキュメント、スキルやルールのファイルなど)。調査メモなど作業用の一時ファイルや、スクラッチパッドの中身は対象外。
+- push 先:現在のブランチが main なら、ブランチを切らずに main へ直接 push する。
+- add:作った・変えたファイルを個別に指定する。`git add .` や `git add -A` は使わない。既存の未追跡ファイル(`.claude/agents/`、`reports/`、`research_notes/` など)や、ユーザーが触っている変更は含めない。
+- コミットメッセージ:英語の命令形で1行目を書き、必要なら本文で理由を補う。末尾に Co-Authored-By の行を付ける。
+- コードの成果物:`npm test` と `npm run lint`(`taskboard/` で実行)が通ってからコミットする。失敗したら push せず、失敗の内容をユーザーに伝える。
+- 次の場合は push しない。ユーザーに確認する。
+  - 秘密情報の疑いがあるファイル(`.env`、認証情報など)が含まれる
+  - 強制 push(`--force`)や履歴の書き換えが必要
+  - push が拒否された(リモートに新しいコミットがある場合など)
+- 完了したら、コミットのハッシュと push 先をユーザーに短く報告する。
+
 ## テスト
 
 Vitest + jsdom、`globals: true`、セットアップは `vitest.setup.ts`(jest-dom マッチャー、各テスト後に `localStorage` を空にし `vi.unstubAllGlobals()` を呼ぶ)。テストは `src/**/*.test.{ts,tsx}` から収集され、ソースと同じ場所に置く。`@` エイリアスは `src/` を指し、Vitest とアプリの両方で有効(`tsconfig.json` でも設定)。
