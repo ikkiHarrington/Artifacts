@@ -53,3 +53,30 @@ export function taskReducer(tasks: Task[], action: TaskAction): Task[] {
 export function filterByStatus(tasks: Task[], status: TaskStatus): Task[] {
   return tasks.filter((t) => t.status === status);
 }
+
+export interface TaskFilter {
+  /** タイトルと説明を対象にした部分一致検索 */
+  query: string;
+  /** 担当者の完全一致。空文字は絞り込みなし */
+  assignee: string;
+  /** 優先度の完全一致。空文字は絞り込みなし */
+  priority: TaskPriority | "";
+}
+
+export const EMPTY_FILTER: TaskFilter = { query: "", assignee: "", priority: "" };
+
+export function filterTasks(tasks: Task[], filter: TaskFilter): Task[] {
+  const query = filter.query.trim().toLowerCase();
+  if (!query && !filter.assignee && !filter.priority) return tasks;
+  return tasks.filter(
+    (t) =>
+      (!query || t.title.toLowerCase().includes(query) || t.description.toLowerCase().includes(query)) &&
+      (!filter.assignee || t.assignee === filter.assignee) &&
+      (!filter.priority || t.priority === filter.priority),
+  );
+}
+
+/** 絞り込み用の担当者一覧(重複と未設定を除き、コードユニット順で安定して並べる) */
+export function listAssignees(tasks: Task[]): string[] {
+  return [...new Set(tasks.map((t) => t.assignee).filter(Boolean))].sort();
+}

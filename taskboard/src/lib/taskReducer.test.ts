@@ -1,5 +1,5 @@
 ﻿import { describe, expect, it } from "vitest";
-import { createTask, filterByStatus, isOverdue, taskReducer } from "./taskReducer";
+import { createTask, EMPTY_FILTER, filterByStatus, filterTasks, isOverdue, listAssignees, taskReducer } from "./taskReducer";
 import type { Task } from "@/types/task";
 
 const make = (id: string, status: Task["status"] = "todo"): Task => ({
@@ -65,6 +65,42 @@ describe("taskReducer", () => {
     const before = [make("a")];
     expect(taskReducer(before, { type: "move", id: "a", status: "todo" })).toBe(before);
     expect(taskReducer(before, { type: "move", id: "zzz", status: "done" })).toBe(before);
+  });
+});
+
+describe("filterTasks", () => {
+  const tasks = [
+    { ...make("a"), title: "買い物", description: "牛乳とパン", assignee: "田中", priority: "high" as const },
+    { ...make("b"), title: "資料作成", description: "Quarterly REPORT", assignee: "鈴木", priority: "low" as const },
+    { ...make("c"), title: "掃除", assignee: "田中", priority: "low" as const },
+  ];
+  const ids = (list: Task[]) => list.map((t) => t.id);
+
+  it("returns everything for the empty filter", () => {
+    expect(filterTasks(tasks, EMPTY_FILTER)).toBe(tasks);
+  });
+  it("searches title and description, case-insensitively and ignoring surrounding spaces", () => {
+    expect(ids(filterTasks(tasks, { ...EMPTY_FILTER, query: "買い" }))).toEqual(["a"]);
+    expect(ids(filterTasks(tasks, { ...EMPTY_FILTER, query: "牛乳" }))).toEqual(["a"]);
+    expect(ids(filterTasks(tasks, { ...EMPTY_FILTER, query: "  quarterly report " }))).toEqual(["b"]);
+  });
+  it("does not search the assignee", () => {
+    expect(filterTasks(tasks, { ...EMPTY_FILTER, query: "田中" })).toEqual([]);
+  });
+  it("filters by assignee and priority", () => {
+    expect(ids(filterTasks(tasks, { ...EMPTY_FILTER, assignee: "田中" }))).toEqual(["a", "c"]);
+    expect(ids(filterTasks(tasks, { ...EMPTY_FILTER, priority: "low" }))).toEqual(["b", "c"]);
+  });
+  it("combines all conditions with AND", () => {
+    expect(ids(filterTasks(tasks, { query: "掃", assignee: "田中", priority: "low" }))).toEqual(["c"]);
+    expect(filterTasks(tasks, { query: "買い物", assignee: "田中", priority: "low" })).toEqual([]);
+  });
+});
+
+describe("listAssignees", () => {
+  it("returns unique, non-empty assignees in sorted order", () => {
+    const tasks = [{ ...make("a"), assignee: "鈴木" }, { ...make("b"), assignee: "" }, { ...make("c"), assignee: "鈴木" }, { ...make("d"), assignee: "田中" }];
+    expect(listAssignees(tasks)).toEqual(["田中", "鈴木"]);
   });
 });
 

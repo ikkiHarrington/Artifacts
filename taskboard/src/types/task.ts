@@ -1,10 +1,11 @@
-﻿export const STATUSES = ["todo", "in-progress", "done"] as const;
+﻿export const STATUSES = ["todo", "in-progress", "on-hold", "done"] as const;
 
 export type TaskStatus = (typeof STATUSES)[number];
 
 export const STATUS_LABELS: Record<TaskStatus, string> = {
   todo: "未着手",
   "in-progress": "進行中",
+  "on-hold": "保留",
   done: "完了",
 };
 
