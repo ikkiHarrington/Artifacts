@@ -1,14 +1,14 @@
 ﻿"use client";
 
 import { useCallback, useReducer } from "react";
-import { createTask, taskReducer } from "@/lib/taskReducer";
+import { createTask, taskReducer, type TaskExtras } from "@/lib/taskReducer";
 import type { Task, TaskStatus } from "@/types/task";
 
 export function useTasks(initial: Task[] = []) {
   const [tasks, dispatch] = useReducer(taskReducer, initial);
 
-  const addTask = useCallback((title: string, description: string): boolean => {
-    const task = createTask(title, description, crypto.randomUUID());
+  const addTask = useCallback((title: string, description: string, extras?: TaskExtras): boolean => {
+    const task = createTask(title, description, crypto.randomUUID(), extras);
     if (!task) return false;
     dispatch({ type: "add", task });
     return true;

@@ -1,15 +1,52 @@
 ﻿import { describe, expect, it } from "vitest";
-import { createTask, filterByStatus, taskReducer } from "./taskReducer";
+import { createTask, filterByStatus, isOverdue, taskReducer } from "./taskReducer";
 import type { Task } from "@/types/task";
 
-const make = (id: string, status: Task["status"] = "todo"): Task => ({ id, title: id, description: "", status });
+const make = (id: string, status: Task["status"] = "todo"): Task => ({
+  id,
+  title: id,
+  description: "",
+  status,
+  assignee: "",
+  priority: "medium",
+  dueDate: "",
+});
 
 describe("createTask", () => {
-  it("trims input and starts as todo", () => {
-    expect(createTask("  a  ", " d ", "1")).toEqual({ id: "1", title: "a", description: "d", status: "todo" });
+  it("trims input, starts as todo and applies defaults for assignee/priority/dueDate", () => {
+    expect(createTask("  a  ", " d ", "1")).toEqual({
+      id: "1",
+      title: "a",
+      description: "d",
+      status: "todo",
+      assignee: "",
+      priority: "medium",
+      dueDate: "",
+    });
   });
   it("returns null for blank title", () => {
     expect(createTask("   ", "x", "1")).toBeNull();
+  });
+  it("stores trimmed assignee, priority and dueDate", () => {
+    const task = createTask("a", "", "1", { assignee: "  田中  ", priority: "high", dueDate: "2026-12-01" });
+    expect(task).toMatchObject({ assignee: "田中", priority: "high", dueDate: "2026-12-01" });
+  });
+  it("falls back to medium for an invalid priority and to empty for an invalid dueDate", () => {
+    const task = createTask("a", "", "1", { priority: "urgent" as never, dueDate: "来週" });
+    expect(task).toMatchObject({ priority: "medium", dueDate: "" });
+  });
+});
+
+describe("isOverdue", () => {
+  const today = new Date(2026, 10, 21); // 2026-11-21 (local)
+  it("is true only when dueDate is before today and the task is not done", () => {
+    expect(isOverdue({ ...make("a"), dueDate: "2026-11-20" }, today)).toBe(true);
+    expect(isOverdue({ ...make("a"), dueDate: "2026-11-21" }, today)).toBe(false);
+    expect(isOverdue({ ...make("a"), dueDate: "2026-11-22" }, today)).toBe(false);
+  });
+  it("is false for done tasks and tasks without a dueDate", () => {
+    expect(isOverdue({ ...make("a", "done"), dueDate: "2026-01-01" }, today)).toBe(false);
+    expect(isOverdue(make("a"), today)).toBe(false);
   });
 });
 
