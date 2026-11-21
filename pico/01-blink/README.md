@@ -9,6 +9,8 @@
 3. Debug Probe と Pico を、それぞれ USB で PC につなぐ。
 4. VS Code で **このフォルダ(`pico/01-blink`)を開く**。
 
+開発環境の入れ方と、この PC で実際に行った作業は [../SETUP.md](../SETUP.md) を参照。
+
 ## 1. 動かす
 
 1. `Raspberry Pi Pico: Compile Pico Project` でビルドする。

@@ -23,6 +23,8 @@ VS Code の拡張「Raspberry Pi Pico」(`raspberry-pi.raspberry-pi-pico`)を使
 | picotool / pioasm | 2.3.1 | `.pico-sdk/picotool/2.3.1`、`.pico-sdk/tools/2.3.1` |
 | OpenOCD | 0.12.0+dev | `.pico-sdk/openocd/0.12.0+dev` |
 
+この PC で実際に行った作業(入れたもの、間違えたことと対処、元に戻す方法)は [SETUP.md](SETUP.md) にまとめてある。
+
 ### 新しい PC で用意するとき
 
 1. VS Code に拡張「Raspberry Pi Pico」を入れる。
