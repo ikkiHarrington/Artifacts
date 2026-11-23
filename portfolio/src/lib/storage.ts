@@ -13,7 +13,7 @@ export async function loadPortfolio(file = dataPath()): Promise<PortfolioData> {
   try {
     text = await readFile(/*turbopackIgnore: true*/ file, "utf8");
   } catch (e) {
-    if ((e as NodeJS.ErrnoException).code === "ENOENT") return { holdings: [], snapshots: [] };
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return { holdings: [], snapshots: [], reviews: [] };
     throw e;
   }
   try {

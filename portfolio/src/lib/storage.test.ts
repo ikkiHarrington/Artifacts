@@ -16,7 +16,7 @@ afterEach(async () => {
 
 describe("storage", () => {
   it("ファイルがなければ空データ", async () => {
-    await expect(loadPortfolio(path.join(dir, "none.json"))).resolves.toEqual({ holdings: [], snapshots: [] });
+    await expect(loadPortfolio(path.join(dir, "none.json"))).resolves.toEqual({ holdings: [], snapshots: [], reviews: [] });
   });
 
   it("保存したデータを読み戻せる(ディレクトリも作る)", async () => {
@@ -36,6 +36,7 @@ describe("storage", () => {
         },
       ],
       snapshots: [],
+      reviews: [],
     };
     await savePortfolio(data, file);
     await expect(loadPortfolio(file)).resolves.toEqual(data);

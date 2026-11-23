@@ -1,4 +1,5 @@
 import {
+  addReview,
   createHolding,
   marketValue,
   parsePortfolioData,
@@ -101,8 +102,8 @@ describe("createHolding", () => {
 
 describe("parsePortfolioData", () => {
   it("壊れた入力は空データにする", () => {
-    expect(parsePortfolioData(null)).toEqual({ holdings: [], snapshots: [] });
-    expect(parsePortfolioData({ holdings: "x" })).toEqual({ holdings: [], snapshots: [] });
+    expect(parsePortfolioData(null)).toEqual({ holdings: [], snapshots: [], reviews: [] });
+    expect(parsePortfolioData({ holdings: "x" })).toEqual({ holdings: [], snapshots: [], reviews: [] });
   });
 
   it("不正な保有は捨て、正しいものは残す", () => {
@@ -136,5 +137,19 @@ describe("スナップショット", () => {
     const b = takeSnapshot([], "2026-11-08");
     const b2 = { ...b, totalValue: 99 };
     expect(upsertSnapshot([b, a], b2)).toEqual([a, b2]);
+  });
+});
+
+describe("見直しレポート", () => {
+  it("parsePortfolioData は不正なレポートを捨てる", () => {
+    const data = parsePortfolioData({
+      reviews: [{ createdAt: "2026-11-23T00:00:00Z", text: "ok" }, { createdAt: 1, text: "x" }, { createdAt: "x", text: "" }],
+    });
+    expect(data.reviews).toEqual([{ createdAt: "2026-11-23T00:00:00Z", text: "ok" }]);
+  });
+
+  it("addReview は先頭に追加し、上限を超えた古いものを捨てる", () => {
+    const r = (n: number) => ({ createdAt: String(n), text: String(n) });
+    expect(addReview([r(2), r(1)], r(3), 2)).toEqual([r(3), r(2)]);
   });
 });

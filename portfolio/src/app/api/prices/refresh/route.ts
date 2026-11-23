@@ -10,7 +10,7 @@ export async function POST() {
     const data = await loadPortfolio();
     const { holdings, errors } = await refreshPrices(data.holdings, now);
     const snapshots = upsertSnapshot(data.snapshots, takeSnapshot(holdings, jstDate(now)));
-    const next = { holdings, snapshots };
+    const next = { ...data, holdings, snapshots };
     await savePortfolio(next);
     return Response.json({ data: next, errors });
   } catch (e) {

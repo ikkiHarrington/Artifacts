@@ -5,6 +5,7 @@ import {
   type AssetClass,
   type Holding,
   type PortfolioData,
+  type Review,
   type Snapshot,
 } from "@/types/portfolio";
 
@@ -157,7 +158,7 @@ function parseSnapshot(value: unknown): Snapshot | null {
 
 /** 保存データを検証・正規化する。壊れた要素は捨てる */
 export function parsePortfolioData(value: unknown): PortfolioData {
-  if (typeof value !== "object" || value === null) return { holdings: [], snapshots: [] };
+  if (typeof value !== "object" || value === null) return { holdings: [], snapshots: [], reviews: [] };
   const v = value as Record<string, unknown>;
 
   const holdings = Array.isArray(v.holdings)
@@ -177,7 +178,20 @@ export function parsePortfolioData(value: unknown): PortfolioData {
       })
     : [];
 
-  return { holdings, snapshots };
+  const reviews = Array.isArray(v.reviews)
+    ? v.reviews.flatMap((r): Review[] => {
+        if (typeof r !== "object" || r === null) return [];
+        const { createdAt, text } = r as Record<string, unknown>;
+        return typeof createdAt === "string" && typeof text === "string" && text ? [{ createdAt, text }] : [];
+      })
+    : [];
+
+  return { holdings, snapshots, reviews };
+}
+
+/** 見直しレポートを先頭に追加し、古いものは max 件を超えた分を捨てる */
+export function addReview(reviews: Review[], review: Review, max = 50): Review[] {
+  return [review, ...reviews].slice(0, max);
 }
 
 export function takeSnapshot(holdings: Holding[], date: string): Snapshot {

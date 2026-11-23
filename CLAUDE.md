@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `taskboard/` — メインのアプリ。Next.js(App Router、Turbopack)+ React + Tailwind v4 のカンバンボード。以下のコマンドはすべてこのディレクトリで実行する。
 - `taskapp/index.html` — 以前作られた単一ファイルのタスクアプリ。`taskboard/` とは独立している。
-- `portfolio/` — 資産(株式中心)をローカルで見直すダッシュボード。構成・コマンドは taskboard と同じ(dev は `127.0.0.1:3001`)。保有データは `portfolio/data/`(`.gitignore` 済み)に保存し、**絶対にコミットしない**。AI にはマスク済みデータだけを送る方針(ローカル AI はスタブで差し替え可能にする)。
+- `portfolio/` — 資産(株式中心)をローカルで見直すダッシュボード。構成・コマンドは taskboard と同じ(dev は `127.0.0.1:3001`)。保有データは `portfolio/data/`(`.gitignore` 済み)に保存し、**絶対にコミットしない**。AI にはマスク済みデータだけを送る方針(ローカル AI はスタブで差し替え可能にする)。マスクは `src/lib/mask.ts`(割合・損益率・指数のみ。金額・数量・単価・id は送らない)で、送信内容を変えるときは `mask.test.ts` の「含まない」テストも更新する。AI 実装は `src/lib/ai/`(`AiProvider` を `AI_PROVIDER` で切り替え)。
 - Windows の Git Bash から `npx vitest` を実行すると「failed to find the current suite」で失敗することがある(パス表記の違いが原因)。テストは PowerShell から実行する。
 
 ## コマンド(`taskboard/` で実行)

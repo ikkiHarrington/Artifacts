@@ -50,7 +50,16 @@ export interface Snapshot {
   byClass: Record<AssetClass, number>;
 }
 
+/** AI による見直しレポート */
+export interface Review {
+  /** 作成日時(ISO 8601) */
+  createdAt: string;
+  text: string;
+}
+
 export interface PortfolioData {
   holdings: Holding[];
   snapshots: Snapshot[];
+  /** 新しい順 */
+  reviews: Review[];
 }

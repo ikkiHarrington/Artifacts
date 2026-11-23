@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { AiPanel } from "./AiPanel";
 import { AllocationChart } from "./AllocationChart";
 import { HistoryChart } from "./HistoryChart";
 import { HoldingForm } from "./HoldingForm";
@@ -130,6 +131,10 @@ export function Dashboard() {
           <HistoryChart snapshots={data.snapshots} />
         </Card>
       </div>
+
+      <Card title="AI による見直し">
+        <AiPanel reviews={data.reviews} onReviewsChange={(reviews) => setData((d) => (d ? { ...d, reviews } : d))} />
+      </Card>
 
       <Card title="保有一覧">
         <HoldingsTable
