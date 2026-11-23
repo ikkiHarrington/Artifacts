@@ -1,6 +1,6 @@
 @echo off
 rem ============================================================
-rem Portfolio を起動して、ブラウザで開く
+rem 資産レビュー(portfolio)を起動して、ブラウザで開く
 rem
 rem 使い方: このファイルをダブルクリックする(デスクトップにショートカットを置いてもよい)
 rem 終了  : このウィンドウで Ctrl+C を押すか、ウィンドウを閉じる
@@ -44,7 +44,7 @@ if not defined PORTFOLIO_NO_BROWSER (
   start "" /b powershell -NoProfile -Command "for ($i = 0; $i -lt 60; $i++) { try { Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 '%URL%/api/portfolio' | Out-Null; Start-Process '%URL%'; break } catch { Start-Sleep -Seconds 1 } }"
 )
 
-echo Portfolio を起動しています: %URL%
+echo 資産レビューを起動しています: %URL%
 echo 終了するには、このウィンドウで Ctrl+C を押してください。
 call npm run dev
 if errorlevel 1 (

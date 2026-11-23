@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AiPanel } from "./AiPanel";
 import { AllocationChart } from "./AllocationChart";
+import { AppIcon } from "./AppIcon";
 import { CsvImport } from "./CsvImport";
 import { applyImport } from "@/lib/rakutenCsv";
 import { HistoryChart } from "./HistoryChart";
@@ -114,7 +115,10 @@ export function Dashboard() {
     <div className="mx-auto flex max-w-[1360px] flex-col gap-5 px-6 pt-6 pb-16">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <h1 className="text-2xl font-bold">Portfolio</h1>
+          <h1 className="flex items-center gap-2.5 text-2xl font-bold">
+            <AppIcon className="h-8 w-8" />
+            資産レビュー
+          </h1>
           <p className="text-sm text-muted">
             保有 {holdings.length} 件{lastSnapshot && ` · 最終記録 ${lastSnapshot.date}`}
           </p>
