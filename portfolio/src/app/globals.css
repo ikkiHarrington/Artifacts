@@ -10,8 +10,8 @@
   --color-accent: #2457c5;
   --color-accent-hover: #1a3f91;
   --color-accent-soft: #e8eefa;
-  --color-gain: #0f6e4f;
-  --color-loss: #b42318;
+  --color-gain: #15803d; /* 利益(+)は緑 */
+  --color-loss: #dc2626; /* 損失(−)は赤 */
 }
 
 body {
