@@ -1,0 +1,2 @@
+# cmd はバッチファイルを CRLF で読む前提のため、どの環境でもチェックアウト時に CRLF にする
+*.bat text eol=crlf
