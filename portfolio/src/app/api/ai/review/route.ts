@@ -1,5 +1,5 @@
 import { jstDate } from "@/lib/format";
-import { AiError, REVIEW_INSTRUCTION, SYSTEM_PROMPT, buildPortfolioContext, getProvider } from "@/lib/ai";
+import { AiError, buildPortfolioContext, getProvider, loadPrompts } from "@/lib/ai";
 import { addReview } from "@/lib/portfolio";
 import { loadPortfolio, savePortfolio } from "@/lib/storage";
 
@@ -11,11 +11,13 @@ export async function POST(request: Request) {
     const data = await loadPortfolio();
     if (data.holdings.length === 0) throw new AiError("保有が登録されていません。");
 
+    // プロンプトは毎回ファイルから読む(prompts/*.md を保存すれば、ビルドなしで反映される)
+    const prompts = await loadPrompts();
     const now = new Date();
     const context = buildPortfolioContext(data, jstDate(now), body.revealNames === true);
     const text = await provider.complete({
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: `# ポートフォリオ\n\n${context}\n\n---\n\n${REVIEW_INSTRUCTION}` }],
+      system: prompts.system,
+      messages: [{ role: "user", content: `# ポートフォリオ\n\n${context}\n\n---\n\n${prompts.review}` }],
       effort: "high",
     });
 

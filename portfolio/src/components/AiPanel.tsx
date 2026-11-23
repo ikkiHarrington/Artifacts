@@ -13,6 +13,18 @@ interface Props {
 
 type Busy = "preview" | "review" | "chat" | null;
 
+interface Preview {
+  provider: string;
+  external: boolean;
+  text: string;
+  /** AI への指示。prompts/*.md から読んだか、既定のものか */
+  prompts?: { system: string; review: string; source: { system: "file" | "default"; review: "file" | "default" } };
+}
+
+function sourceLabel(source: "file" | "default", file: string): string {
+  return source === "file" ? `prompts/${file}` : `既定(prompts/${file} がないため)`;
+}
+
 async function postJson<T>(url: string, body: unknown): Promise<T> {
   const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   const json = await res.json().catch(() => ({}));
@@ -27,7 +39,7 @@ function formatDateTime(iso: string): string {
 export function AiPanel({ reviews, onReviewsChange }: Props) {
   // 銘柄名は送ってよい(金額・数量・単価は常に送らない)というユーザーの判断により、既定はオン
   const [revealNames, setRevealNames] = useState(true);
-  const [preview, setPreview] = useState<{ provider: string; external: boolean; text: string } | null>(null);
+  const [preview, setPreview] = useState<Preview | null>(null);
   const [busy, setBusy] = useState<Busy>(null);
   const [error, setError] = useState("");
   const [turns, setTurns] = useState<ChatTurn[]>([]);
@@ -141,6 +153,19 @@ export function AiPanel({ reviews, onReviewsChange }: Props) {
           <pre className="max-h-80 overflow-auto whitespace-pre-wrap text-xs" aria-label="送信内容">
             {preview.text}
           </pre>
+          {preview.prompts && (
+            <details className="mt-3 border-t border-line pt-2 text-xs">
+              <summary className="cursor-pointer text-muted">AI への指示(プロンプト)も見る</summary>
+              <p className="mt-2 text-muted">システムプロンプト: {sourceLabel(preview.prompts.source.system, "system.md")}</p>
+              <pre className="mt-1 max-h-60 overflow-auto whitespace-pre-wrap" aria-label="システムプロンプト">
+                {preview.prompts.system}
+              </pre>
+              <p className="mt-2 text-muted">レポートの指示: {sourceLabel(preview.prompts.source.review, "review.md")}</p>
+              <pre className="mt-1 max-h-60 overflow-auto whitespace-pre-wrap" aria-label="レポートの指示">
+                {preview.prompts.review}
+              </pre>
+            </details>
+          )}
         </div>
       )}
 

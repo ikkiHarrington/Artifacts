@@ -20,6 +20,24 @@ describe("AiPanel", () => {
     expect(String((fetchMock.mock.calls[0] as unknown[])[0])).toBe("/api/ai/preview?revealNames=true");
   });
 
+  it("送信内容の確認で、プロンプトとその読み込み元も見られる", async () => {
+    const prompts = {
+      system: "データの読み方…",
+      review: "レポートの構成…",
+      source: { system: "file", review: "default" },
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ provider: "Claude", external: true, text: "データ", prompts })));
+    render(<AiPanel reviews={[]} onReviewsChange={() => {}} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "送信内容を確認" }));
+    await userEvent.click(await screen.findByText("AI への指示(プロンプト)も見る"));
+
+    expect(screen.getByLabelText("システムプロンプト")).toHaveTextContent("データの読み方…");
+    expect(screen.getByText("システムプロンプト: prompts/system.md")).toBeInTheDocument();
+    expect(screen.getByLabelText("レポートの指示")).toHaveTextContent("レポートの構成…");
+    expect(screen.getByText("レポートの指示: 既定(prompts/review.md がないため)")).toBeInTheDocument();
+  });
+
   it("レポート作成で onReviewsChange に新しい履歴を渡す。オフにすると匿名で送る", async () => {
     const reviews = [{ createdAt: "2026-11-23T00:00:00Z", text: "新しいレポート" }];
     vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ review: reviews[0], reviews })));

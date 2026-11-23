@@ -5,26 +5,21 @@
  *       実データは使わない(CLAUDE.md のルール)。Claude Code(サブスク)を2回呼び出す。
  * 使い方(PowerShell、portfolio/ で実行):
  *   $env:PROMPT_OUT = "<出力先フォルダ>"   # 必須。in-A.md / out-<PROMPT_ITER>-A.md などを書き出す
- *   $env:PROMPT_DIR = "<フォルダ>"         # 任意。system.md / instruction.md があればコードの代わりに使う
+ *   $env:PROMPT_DIR = "<フォルダ>"         # 任意。試したい system.md / review.md のフォルダ(既定はアプリと同じ prompts/)
  *   $env:PROMPT_ITER = "1"                 # 任意。出力ファイル名の番号(既定 0)
  *   npx vitest run src/lib/ai/reviewPrompt.eval.test.ts
  * 架空データ A: 銘柄名あり・推移あり。指数の重複、業種の偏り、価格未取得、途中の入金、含み損を含む。
  * 架空データ B: 匿名・推移1件。現金が過半、日本株が1業種のみ。
  */
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { REVIEW_INSTRUCTION, SYSTEM_PROMPT, buildPortfolioContext } from "./index";
+import { buildPortfolioContext, loadPrompts } from "./index";
 import { createClaudeCodeProvider } from "./claudeCode";
 import type { Holding, PortfolioData, Snapshot } from "@/types/portfolio";
 
 const out = process.env.PROMPT_OUT ?? "";
 const promptDir = process.env.PROMPT_DIR ?? "";
 const iter = process.env.PROMPT_ITER ?? "0";
-
-async function readPrompt(file: string, fallback: string): Promise<string> {
-  if (!promptDir) return fallback;
-  return readFile(path.join(promptDir, file), "utf8").catch(() => fallback);
-}
 
 function h(id: string, assetClass: Holding["assetClass"], name: string, sector: string, quantity: number, costPrice: number, currentPrice: number, code = ""): Holding {
   return { id, assetClass, code, name, sector, quantity, costPrice, currentPrice, priceUpdatedAt: "" };
@@ -67,8 +62,8 @@ const B: PortfolioData = {
 
 describe.runIf(out)("見直しレポートのプロンプト評価", () => {
   it("架空データでレポートを生成して書き出す", async () => {
-    const system = await readPrompt("system.md", SYSTEM_PROMPT);
-    const instruction = await readPrompt("instruction.md", REVIEW_INSTRUCTION);
+    // アプリと同じ読み込み方(ファイルがなければ既定のプロンプト)
+    const { system, review: instruction } = await loadPrompts(promptDir || undefined);
     await mkdir(out, { recursive: true });
     const provider = createClaudeCodeProvider();
     const cases: [string, PortfolioData, boolean][] = [["A", A, true], ["B", B, false]];

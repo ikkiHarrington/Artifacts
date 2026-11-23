@@ -1,5 +1,5 @@
 import { jstDate } from "@/lib/format";
-import { AiError, SYSTEM_PROMPT, buildPortfolioContext, getProvider, parseChatTurns } from "@/lib/ai";
+import { AiError, buildPortfolioContext, getProvider, loadPrompts, parseChatTurns } from "@/lib/ai";
 import { loadPortfolio } from "@/lib/storage";
 
 /** マスク済みのポートフォリオを前提に質問に答える。会話履歴は保存しない */
@@ -10,10 +10,10 @@ export async function POST(request: Request) {
 
   try {
     const provider = getProvider();
-    const data = await loadPortfolio();
+    const [data, prompts] = await Promise.all([loadPortfolio(), loadPrompts()]);
     const context = buildPortfolioContext(data, jstDate(new Date()), body.revealNames === true);
     const text = await provider.complete({
-      system: `${SYSTEM_PROMPT}\n\n# 現在のポートフォリオ\n\n${context}`,
+      system: `${prompts.system}\n\n# 現在のポートフォリオ\n\n${context}`,
       messages,
       effort: "medium",
     });
