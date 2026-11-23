@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import type { ChatTurn } from "@/lib/ai/types";
 import type { Review } from "@/types/portfolio";
+import { Markdown } from "./Markdown";
 import { darkButton, primaryButton, secondaryButton } from "./ui";
 
 interface Props {
@@ -31,6 +32,17 @@ export function AiPanel({ reviews, onReviewsChange }: Props) {
   const [error, setError] = useState("");
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState("");
+  /** 大きく表示しているレポート */
+  const [reading, setReading] = useState<Review | null>(null);
+
+  useEffect(() => {
+    if (!reading) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setReading(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [reading]);
 
   async function run(kind: Exclude<Busy, null>, action: () => Promise<void>) {
     setBusy(kind);
@@ -133,9 +145,14 @@ export function AiPanel({ reviews, onReviewsChange }: Props) {
       )}
 
       {latest ? (
-        <article className="rounded-lg bg-zinc-50 p-4">
-          <h3 className="mb-2 text-xs text-muted">最新のレポート · {formatDateTime(latest.createdAt)}</h3>
-          <div className="max-h-[32rem] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">{latest.text}</div>
+        <article className="rounded-lg border border-line bg-white">
+          <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-2">
+            <h3 className="text-xs text-muted">最新のレポート · {formatDateTime(latest.createdAt)}</h3>
+            <button type="button" onClick={() => setReading(latest)} className="h-9 rounded-md px-2 text-xs text-accent hover:bg-accent-soft">
+              大きく表示
+            </button>
+          </div>
+          <Markdown text={latest.text} className="max-h-[60vh] overflow-y-auto px-4 py-3" />
         </article>
       ) : (
         <p className="rounded-lg bg-zinc-50 p-4 text-sm text-muted">まだ見直しレポートがありません。</p>
@@ -148,7 +165,12 @@ export function AiPanel({ reviews, onReviewsChange }: Props) {
             {older.map((r) => (
               <details key={r.createdAt} className="rounded-lg border border-line p-2">
                 <summary className="cursor-pointer text-xs text-muted">{formatDateTime(r.createdAt)}</summary>
-                <div className="mt-2 whitespace-pre-wrap leading-relaxed">{r.text}</div>
+                <div className="mt-2 flex justify-end">
+                  <button type="button" onClick={() => setReading(r)} className="h-9 rounded-md px-2 text-xs text-accent hover:bg-accent-soft">
+                    大きく表示
+                  </button>
+                </div>
+                <Markdown text={r.text} />
               </details>
             ))}
           </div>
@@ -169,13 +191,13 @@ export function AiPanel({ reviews, onReviewsChange }: Props) {
             {turns.map((t, i) => (
               <li
                 key={i}
-                className={`max-w-[85%] whitespace-pre-wrap px-3.5 py-2.5 text-sm leading-relaxed ${
+                className={`max-w-[90%] px-3.5 py-2.5 text-sm leading-relaxed ${
                   t.role === "user"
-                    ? "self-end rounded-xl rounded-br-sm bg-accent-soft"
+                    ? "self-end whitespace-pre-wrap rounded-xl rounded-br-sm bg-accent-soft"
                     : "self-start rounded-xl rounded-bl-sm bg-zinc-100"
                 }`}
               >
-                {t.content}
+                {t.role === "assistant" ? <Markdown text={t.content} /> : t.content}
               </li>
             ))}
           </ul>
@@ -195,6 +217,26 @@ export function AiPanel({ reviews, onReviewsChange }: Props) {
         </form>
         <p className="text-xs text-muted">会話は保存されません。</p>
       </div>
+
+      {reading && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/40 p-4 sm:p-10" onClick={() => setReading(null)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="見直しレポート"
+            className="w-full max-w-3xl rounded-xl bg-white shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-line px-6 py-3">
+              <h3 className="text-sm text-muted">見直しレポート · {formatDateTime(reading.createdAt)}</h3>
+              <button type="button" autoFocus onClick={() => setReading(null)} className={secondaryButton}>
+                閉じる
+              </button>
+            </div>
+            <Markdown text={reading.text} size="large" className="px-6 py-5" />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

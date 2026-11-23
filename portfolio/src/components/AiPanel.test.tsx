@@ -48,6 +48,24 @@ describe("AiPanel", () => {
     expect(screen.getByText("過去のレポート(1件)")).toBeInTheDocument();
   });
 
+  it("レポートは Markdown として表示し(記号を残さない)、大きく表示して Esc で閉じられる", async () => {
+    render(
+      <AiPanel
+        reviews={[{ createdAt: "2026-11-23T00:00:00Z", text: "## 全体の状況\n集中度は **66.1%** です。\n- 現金 16%" }]}
+        onReviewsChange={() => {}}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "全体の状況" })).toBeInTheDocument();
+    expect(screen.getByText("66.1%").tagName).toBe("STRONG");
+    expect(screen.getByRole("listitem")).toHaveTextContent("現金 16%");
+    expect(screen.queryByText(/\*\*/)).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "大きく表示" }));
+    expect(screen.getByRole("dialog", { name: "見直しレポート" })).toHaveTextContent("集中度は 66.1% です。");
+    await userEvent.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
   it("チャットは履歴を送り、回答を会話に追加する", async () => {
     const fetchMock = vi.fn(async () => jsonResponse({ text: "業種が偏っています" }));
     vi.stubGlobal("fetch", fetchMock);
