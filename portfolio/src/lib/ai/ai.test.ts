@@ -72,6 +72,12 @@ describe("getProvider", () => {
     await expect(ollama.complete({ system: "", messages: [], effort: "medium" })).rejects.toThrow("まだ実装されていません");
   });
 
+  it("claude-code でサブスク経由のプロバイダーを選ぶ", () => {
+    const p = getProvider({ AI_PROVIDER: "Claude-Code" });
+    expect(p.name).toContain("Claude Code");
+    expect(p.external).toBe(true);
+  });
+
   it("不明な値はエラー", () => {
     expect(() => getProvider({ AI_PROVIDER: "gpt" })).toThrow(AiError);
   });

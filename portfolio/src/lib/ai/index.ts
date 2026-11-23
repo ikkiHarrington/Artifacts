@@ -1,4 +1,5 @@
 import { createClaudeProvider } from "./claude";
+import { createClaudeCodeProvider } from "./claudeCode";
 import { renderMaskedPortfolio, maskPortfolio } from "../mask";
 import { createOllamaProvider } from "./ollama";
 import { AiError, type AiProvider, type ChatTurn } from "./types";
@@ -7,12 +8,13 @@ import type { PortfolioData } from "@/types/portfolio";
 export { AiError } from "./types";
 export type { AiProvider, ChatTurn } from "./types";
 
-/** AI_PROVIDER(claude | ollama、既定は claude)で実装を選ぶ */
+/** AI_PROVIDER(claude | claude-code | ollama、既定は claude)で実装を選ぶ */
 export function getProvider(env: Record<string, string | undefined> = process.env): AiProvider {
   const name = (env.AI_PROVIDER ?? "claude").trim().toLowerCase();
   if (name === "claude" || name === "") return createClaudeProvider();
+  if (name === "claude-code") return createClaudeCodeProvider();
   if (name === "ollama") return createOllamaProvider();
-  throw new AiError(`AI_PROVIDER の値が不正です: ${name}(claude か ollama を指定してください)`);
+  throw new AiError(`AI_PROVIDER の値が不正です: ${name}(claude / claude-code / ollama のいずれかを指定してください)`);
 }
 
 export const SYSTEM_PROMPT = `あなたは個人投資家の資産ポートフォリオを定期的に見直すアシスタントです。

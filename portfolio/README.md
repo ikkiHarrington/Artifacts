@@ -18,16 +18,29 @@ npm run dev   # http://127.0.0.1:3001 (自分の PC からのみアクセス可)
 
 「AI による見直し」から、見直しレポートの作成と AI への質問ができます。
 
-Claude API は有料(サブスクリプションとは別課金)なので、AI はボタンを押したときだけ呼び出します。定期実行や自動実行はしません。
+AI はボタンを押したときだけ呼び出します(Claude API は有料で、Claude Code 経由でもサブスクの利用枠を使うため)。定期実行や自動実行はしません。
 
-### 設定
+### 設定(AI の実行方法を選ぶ)
 
-`portfolio/.env.local` を作って API キーを書き、開発サーバーを再起動します(`.env*` は `.gitignore` 済み)。
+`portfolio/.env.local` に書いて、開発サーバーを再起動します(`.env*` は `.gitignore` 済み)。
+
+| `AI_PROVIDER` | 費用 | 設定 |
+|---|---|---|
+| `claude-code` | サブスク(Pro/Max)の利用枠内 | 不要。Claude Code にログイン済みならそのまま動く |
+| `claude`(既定) | API の従量課金(レポート1回 10〜20円程度) | `ANTHROPIC_API_KEY=sk-ant-...` |
+| `ollama` | 無料 | 現在はスタブ(未実装) |
 
 ```
-ANTHROPIC_API_KEY=sk-ant-...
-# AI_PROVIDER=claude   # 既定。ollama にするとローカル AI(現在はスタブで未実装)
+# サブスクで使う場合
+AI_PROVIDER=claude-code
 ```
+
+`claude-code` の補足:
+
+- Claude Code の CLI を `claude -p` で呼び出します。CLI は `CLAUDE_CODE_PATH` → VS Code 拡張に同梱の最新版 → PATH 上の `claude` の順に探します。
+- ツールはすべて無効にし、空の作業フォルダで実行します(AI がファイルやコマンドに触れない)。
+- `ANTHROPIC_API_KEY` を設定していても CLI には渡しません(API で課金されないようにするため)。
+- レポート1回に 20 秒〜1 分ほどかかります。
 
 ### AI に送る内容(マスク)
 
