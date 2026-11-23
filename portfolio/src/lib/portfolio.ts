@@ -93,6 +93,7 @@ export interface HoldingInput {
   costPrice: unknown;
   currentPrice: unknown;
   priceUpdatedAt?: unknown;
+  source?: unknown;
 }
 
 function text(value: unknown): string {
@@ -122,6 +123,7 @@ export function createHolding(input: HoldingInput, id: string): Holding | null {
     name,
     sector: text(input.sector),
     priceUpdatedAt: text(input.priceUpdatedAt),
+    ...(text(input.source) ? { source: text(input.source) } : {}),
   };
 
   // 現金・その他は金額だけを扱う。取得額が未入力なら現在の金額と同じとみなす

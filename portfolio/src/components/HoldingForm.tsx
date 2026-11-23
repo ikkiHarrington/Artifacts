@@ -58,6 +58,8 @@ export function HoldingForm({ initial, onSubmit, onCancel }: Props) {
         costPrice: isAmountOnly ? 0 : fields.costPrice,
         currentPrice: fields.currentPrice === "" ? 0 : fields.currentPrice,
         priceUpdatedAt: initial?.priceUpdatedAt ?? "",
+        // 取り込んだ保有を編集しても、次回の取り込みで入れ替え対象になるよう取り込み元を残す
+        source: initial?.source,
       },
       initial?.id ?? crypto.randomUUID(),
     );

@@ -39,6 +39,8 @@ export interface Holding {
   currentPrice: number;
   /** 現在値を更新した日時(ISO 8601)。未更新は空文字 */
   priceUpdatedAt: string;
+  /** 取り込み元(例: "rakuten")。手入力なら付けない。再取り込みのときに入れ替える対象を見分ける */
+  source?: string;
 }
 
 /** 定期見直しのための時点の記録 */

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AiPanel } from "./AiPanel";
 import { AllocationChart } from "./AllocationChart";
+import { CsvImport } from "./CsvImport";
+import { applyImport } from "@/lib/rakutenCsv";
 import { HistoryChart } from "./HistoryChart";
 import { HoldingForm } from "./HoldingForm";
 import { HoldingsTable } from "./HoldingsTable";
@@ -144,6 +146,10 @@ export function Dashboard() {
             if (window.confirm(`${h.name} を削除しますか?`)) saveHoldings(holdings.filter((x) => x.id !== h.id));
           }}
         />
+      </Card>
+
+      <Card title="楽天証券の CSV を取り込む">
+        <CsvImport disabled={busy} onImport={(imported) => saveHoldings(applyImport(holdings, imported))} />
       </Card>
 
       <Card title={editing ? `編集: ${editing.name}` : "保有を追加"}>
