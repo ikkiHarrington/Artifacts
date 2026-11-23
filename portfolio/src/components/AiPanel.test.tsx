@@ -7,19 +7,20 @@ function jsonResponse(body: unknown, status = 200) {
 }
 
 describe("AiPanel", () => {
-  it("送信内容を確認すると、匿名設定を付けてプレビューを取得して表示する", async () => {
-    const fetchMock = vi.fn(async () => jsonResponse({ provider: "Claude", external: true, text: "銘柄A | 日本株" }));
+  it("銘柄名を送る設定は既定でオン。送信内容の確認でその設定を付けてプレビューを取得する", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ provider: "Claude", external: true, text: "テスト工業(9999) | 日本株" }));
     vi.stubGlobal("fetch", fetchMock);
     render(<AiPanel reviews={[]} onReviewsChange={() => {}} />);
 
+    expect(screen.getByLabelText(/銘柄名を送る/)).toBeChecked();
     await userEvent.click(screen.getByRole("button", { name: "送信内容を確認" }));
 
-    expect(await screen.findByLabelText("送信内容")).toHaveTextContent("銘柄A | 日本株");
+    expect(await screen.findByLabelText("送信内容")).toHaveTextContent("テスト工業(9999) | 日本株");
     expect(screen.getByText(/外部 API/)).toBeInTheDocument();
-    expect(String((fetchMock.mock.calls[0] as unknown[])[0])).toBe("/api/ai/preview?revealNames=false");
+    expect(String((fetchMock.mock.calls[0] as unknown[])[0])).toBe("/api/ai/preview?revealNames=true");
   });
 
-  it("レポート作成で onReviewsChange に新しい履歴を渡す", async () => {
+  it("レポート作成で onReviewsChange に新しい履歴を渡す。オフにすると匿名で送る", async () => {
     const reviews = [{ createdAt: "2026-11-23T00:00:00Z", text: "新しいレポート" }];
     vi.stubGlobal("fetch", vi.fn(async () => jsonResponse({ review: reviews[0], reviews })));
     const onReviewsChange = vi.fn();
@@ -30,7 +31,7 @@ describe("AiPanel", () => {
 
     await vi.waitFor(() => expect(onReviewsChange).toHaveBeenCalledWith(reviews));
     const [, init] = (vi.mocked(fetch).mock.calls[0] as unknown[]) as [string, RequestInit];
-    expect(JSON.parse(String(init.body))).toEqual({ revealNames: true });
+    expect(JSON.parse(String(init.body))).toEqual({ revealNames: false });
   });
 
   it("最新のレポートと過去のレポートを表示する", () => {
@@ -58,7 +59,7 @@ describe("AiPanel", () => {
     expect(await screen.findByText("業種が偏っています")).toBeInTheDocument();
     const [url, init] = (fetchMock.mock.calls[0] as unknown[]) as [string, RequestInit];
     expect(url).toBe("/api/ai/chat");
-    expect(JSON.parse(String(init.body))).toEqual({ revealNames: false, messages: [{ role: "user", content: "偏りは?" }] });
+    expect(JSON.parse(String(init.body))).toEqual({ revealNames: true, messages: [{ role: "user", content: "偏りは?" }] });
   });
 
   it("チャットが失敗したらエラーを表示し、質問を入力欄に戻す", async () => {

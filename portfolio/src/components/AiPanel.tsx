@@ -23,7 +23,8 @@ function formatDateTime(iso: string): string {
 }
 
 export function AiPanel({ reviews, onReviewsChange }: Props) {
-  const [revealNames, setRevealNames] = useState(false);
+  // 銘柄名は送ってよい(金額・数量・単価は常に送らない)というユーザーの判断により、既定はオン
+  const [revealNames, setRevealNames] = useState(true);
   const [preview, setPreview] = useState<{ provider: string; external: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState<Busy>(null);
   const [error, setError] = useState("");
