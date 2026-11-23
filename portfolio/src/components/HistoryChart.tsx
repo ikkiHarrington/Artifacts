@@ -9,8 +9,8 @@ const PAD = 8;
 export function HistoryChart({ snapshots }: { snapshots: Snapshot[] }) {
   if (snapshots.length < 2) {
     return (
-      <p className="text-sm text-zinc-500">
-        「価格を更新」を実行した日ごとに記録されます。2日分以上たまると推移を表示します。
+      <p className="text-sm text-muted">
+        「価格を更新して記録」を押した日ごとに記録されます。2日分以上たまると推移を表示します。
       </p>
     );
   }
@@ -22,19 +22,33 @@ export function HistoryChart({ snapshots }: { snapshots: Snapshot[] }) {
   const x = (i: number) => PAD + (i * (W - PAD * 2)) / (snapshots.length - 1);
   const y = (v: number) => H - PAD - ((v - min) * (H - PAD * 2)) / span;
   const line = (pick: (s: Snapshot) => number) => snapshots.map((s, i) => `${x(i)},${y(pick(s))}`).join(" ");
+  const first = snapshots[0];
+  const last = snapshots.at(-1)!;
 
   return (
-    <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-40 w-full" role="img" aria-label="総資産の推移">
-        <polyline points={line((s) => s.totalCost)} fill="none" stroke="#a1a1aa" strokeWidth="1.5" strokeDasharray="4 3" />
-        <polyline points={line((s) => s.totalValue)} fill="none" stroke="#2563eb" strokeWidth="2" />
-      </svg>
-      <div className="flex justify-between text-xs text-zinc-500">
-        <span>{snapshots[0].date}</span>
+    <div className="space-y-1">
+      <div className="flex flex-wrap justify-between gap-2 text-xs text-muted">
         <span>
-          <span className="text-blue-600">― 評価額</span> <span>- - 取得額</span> ・ 範囲 {yen(min)} 〜 {yen(max)}
+          <span className="text-accent">━</span> 評価額 <span className="pl-2">┅</span> 取得額
         </span>
-        <span>{snapshots.at(-1)!.date}</span>
+        <span className="tabular-nums">
+          範囲 {yen(min)} 〜 {yen(max)}
+        </span>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        className="h-32 w-full"
+        role="img"
+        aria-label={`評価額の推移: ${first.date} ${yen(first.totalValue)} から ${last.date} ${yen(last.totalValue)}`}
+      >
+        <line x1="0" y1={H - 1} x2={W} y2={H - 1} stroke="#e3e5e8" vectorEffect="non-scaling-stroke" />
+        <polyline points={line((s) => s.totalCost)} fill="none" stroke="#8a9199" strokeWidth="2" strokeDasharray="6 5" vectorEffect="non-scaling-stroke" />
+        <polyline points={line((s) => s.totalValue)} fill="none" stroke="#2457c5" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+      </svg>
+      <div className="flex justify-between text-xs text-muted tabular-nums">
+        <span>{first.date}</span>
+        <span>{last.date}</span>
       </div>
     </div>
   );

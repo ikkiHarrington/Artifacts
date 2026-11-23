@@ -1,7 +1,10 @@
 const yenFormat = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 });
 
-export function yen(value: number): string {
-  return yenFormat.format(Math.round(value));
+/** signed なら正の値に + を付ける */
+export function yen(value: number, { signed = false } = {}): string {
+  const rounded = Math.round(value);
+  const text = yenFormat.format(rounded);
+  return signed && rounded > 0 ? `+${text}` : text;
 }
 
 /** 0.1234 → "12.3%"。signed なら正の値に + を付ける */

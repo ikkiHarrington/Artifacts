@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { createHolding } from "@/lib/portfolio";
+import { darkButton, secondaryButton } from "./ui";
 import { ASSET_CLASSES, ASSET_CLASS_LABELS, type AssetClass, type Holding } from "@/types/portfolio";
 
 interface Props {
@@ -37,7 +38,7 @@ function toFields(h?: Holding): Fields {
   };
 }
 
-const inputClass = "w-full rounded border border-zinc-300 px-2 py-1 text-sm";
+const inputClass = "mt-1 h-11 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-ink";
 
 export function HoldingForm({ initial, onSubmit, onCancel }: Props) {
   const [fields, setFields] = useState<Fields>(() => toFields(initial));
@@ -73,8 +74,8 @@ export function HoldingForm({ initial, onSubmit, onCancel }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-2 md:grid-cols-4" aria-label="保有の入力">
-      <label className="text-xs text-zinc-600">
+    <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3 md:grid-cols-4" aria-label="保有の入力">
+      <label className="text-xs text-muted">
         種類
         <select
           className={inputClass}
@@ -89,47 +90,47 @@ export function HoldingForm({ initial, onSubmit, onCancel }: Props) {
         </select>
       </label>
       {!isAmountOnly && (
-        <label className="text-xs text-zinc-600">
+        <label className="text-xs text-muted">
           {isFund ? "コード(任意)" : "銘柄コード"}
           <input className={inputClass} value={fields.code} onChange={(e) => set("code", e.target.value)} placeholder={isFund ? "" : "7203"} />
         </label>
       )}
-      <label className="text-xs text-zinc-600">
+      <label className="text-xs text-muted">
         名称
         <input className={inputClass} value={fields.name} onChange={(e) => set("name", e.target.value)} />
       </label>
-      <label className="text-xs text-zinc-600">
+      <label className="text-xs text-muted">
         {isFund ? "分類(例:全世界株式)" : "業種・分類"}
         <input className={inputClass} value={fields.sector} onChange={(e) => set("sector", e.target.value)} />
       </label>
       {!isAmountOnly && (
         <>
-          <label className="text-xs text-zinc-600">
+          <label className="text-xs text-muted">
             {isFund ? "口数" : "株数"}
             <input className={inputClass} inputMode="decimal" value={fields.quantity} onChange={(e) => set("quantity", e.target.value)} />
           </label>
-          <label className="text-xs text-zinc-600">
+          <label className="text-xs text-muted">
             {isFund ? "取得単価(1万口あたり)" : "取得単価"}
             <input className={inputClass} inputMode="decimal" value={fields.costPrice} onChange={(e) => set("costPrice", e.target.value)} />
           </label>
         </>
       )}
-      <label className="text-xs text-zinc-600">
+      <label className="text-xs text-muted">
         {isAmountOnly ? "金額" : isFund ? "基準価額" : "現在値(空欄なら価格更新で取得)"}
         <input className={inputClass} inputMode="decimal" value={fields.currentPrice} onChange={(e) => set("currentPrice", e.target.value)} />
       </label>
       <div className="col-span-2 flex items-end gap-2 md:col-span-1">
-        <button type="submit" className="rounded bg-zinc-900 px-3 py-1.5 text-sm text-white hover:bg-zinc-700">
+        <button type="submit" className={darkButton}>
           {initial ? "更新" : "追加"}
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} className="rounded border px-3 py-1.5 text-sm">
+          <button type="button" onClick={onCancel} className={secondaryButton}>
             キャンセル
           </button>
         )}
       </div>
       {error && (
-        <p role="alert" className="col-span-full text-sm text-red-600">
+        <p role="alert" className="col-span-full text-sm text-loss">
           {error}
         </p>
       )}

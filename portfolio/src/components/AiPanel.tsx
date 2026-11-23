@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type { ChatTurn } from "@/lib/ai/types";
 import type { Review } from "@/types/portfolio";
+import { darkButton, primaryButton, secondaryButton } from "./ui";
 
 interface Props {
   reviews: Review[];
@@ -86,84 +87,93 @@ export function AiPanel({ reviews, onReviewsChange }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-1.5 text-sm">
+      <div className="space-y-2">
+        <label className="flex items-center gap-2 text-sm">
           <input
             type="checkbox"
+            className="h-4 w-4"
             checked={revealNames}
             onChange={(e) => {
               setRevealNames(e.target.checked);
               setPreview(null);
             }}
           />
-          銘柄名を送る(オフなら「銘柄A(業種)」の匿名表示)
+          銘柄名を送る
         </label>
-        <button type="button" onClick={togglePreview} disabled={busy !== null} className="rounded border px-3 py-1.5 text-sm disabled:opacity-50">
-          {preview ? "送信内容を閉じる" : "送信内容を確認"}
+        <p className="text-xs leading-relaxed text-muted">
+          送るのは割合・損益率・指数だけで、金額・株数・単価・総資産額は送りません。オフにすると銘柄は「銘柄A(業種)」の匿名表示になります。
+        </p>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button type="button" onClick={createReview} disabled={busy !== null} className={`${primaryButton} flex-[1_1_160px]`}>
+          {busy === "review" ? "作成中…(1〜2分)" : "見直しレポートを作成"}
         </button>
-        <button
-          type="button"
-          onClick={createReview}
-          disabled={busy !== null}
-          className="rounded bg-violet-600 px-3 py-1.5 text-sm text-white hover:bg-violet-500 disabled:opacity-50"
-        >
-          {busy === "review" ? "作成中…(1〜2分かかることがあります)" : "見直しレポートを作成"}
+        <button type="button" onClick={togglePreview} disabled={busy !== null} className={`${secondaryButton} flex-[1_1_120px]`}>
+          {preview ? "送信内容を閉じる" : "送信内容を確認"}
         </button>
       </div>
 
-      <p className="text-xs text-zinc-500">
-        AI に送るのは割合・損益率・指数だけで、金額・株数・単価・総資産額は送りません。内容は「送信内容を確認」で見られます。
-      </p>
-
       {error && (
-        <p role="alert" className="rounded bg-red-50 p-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-loss">
           {error}
         </p>
       )}
 
       {preview && (
-        <div className="rounded border border-zinc-200 bg-zinc-50 p-3">
-          <p className="mb-2 text-xs text-zinc-600">
+        <div className="rounded-lg border border-line bg-zinc-50 p-3">
+          <p className="mb-2 text-xs text-muted">
             送信先: {preview.provider}
             {preview.external ? "(外部 API)" : "(この PC 内)"}
           </p>
-          <pre className="whitespace-pre-wrap text-xs" aria-label="送信内容">
+          <pre className="max-h-80 overflow-auto whitespace-pre-wrap text-xs" aria-label="送信内容">
             {preview.text}
           </pre>
         </div>
       )}
 
       {latest ? (
-        <article className="rounded border border-violet-200 bg-violet-50/40 p-3">
-          <h3 className="mb-2 text-xs font-semibold text-violet-800">最新の見直しレポート({formatDateTime(latest.createdAt)})</h3>
-          <div className="whitespace-pre-wrap text-sm leading-relaxed">{latest.text}</div>
+        <article className="rounded-lg bg-zinc-50 p-4">
+          <h3 className="mb-2 text-xs text-muted">最新のレポート · {formatDateTime(latest.createdAt)}</h3>
+          <div className="max-h-[32rem] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed">{latest.text}</div>
         </article>
       ) : (
-        <p className="text-sm text-zinc-500">まだ見直しレポートがありません。</p>
+        <p className="rounded-lg bg-zinc-50 p-4 text-sm text-muted">まだ見直しレポートがありません。</p>
       )}
 
       {older.length > 0 && (
         <details className="text-sm">
-          <summary className="cursor-pointer text-zinc-600">過去のレポート({older.length}件)</summary>
+          <summary className="cursor-pointer text-accent hover:text-accent-hover">過去のレポート({older.length}件)</summary>
           <div className="mt-2 space-y-2">
             {older.map((r) => (
-              <details key={r.createdAt} className="rounded border border-zinc-200 p-2">
-                <summary className="cursor-pointer text-xs text-zinc-600">{formatDateTime(r.createdAt)}</summary>
-                <div className="mt-2 whitespace-pre-wrap">{r.text}</div>
+              <details key={r.createdAt} className="rounded-lg border border-line p-2">
+                <summary className="cursor-pointer text-xs text-muted">{formatDateTime(r.createdAt)}</summary>
+                <div className="mt-2 whitespace-pre-wrap leading-relaxed">{r.text}</div>
               </details>
             ))}
           </div>
         </details>
       )}
 
-      <div className="space-y-2 border-t border-zinc-100 pt-3">
-        <h3 className="text-sm font-semibold text-zinc-700">AI に質問</h3>
+      <div className="space-y-3 border-t border-line pt-4">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">AI に質問</h3>
+          {turns.length > 0 && (
+            <button type="button" onClick={() => setTurns([])} disabled={busy !== null} className="text-xs text-muted hover:underline disabled:opacity-50">
+              会話をクリア
+            </button>
+          )}
+        </div>
         {turns.length > 0 && (
-          <ul className="space-y-2" aria-label="会話">
+          <ul className="flex flex-col gap-2" aria-label="会話">
             {turns.map((t, i) => (
               <li
                 key={i}
-                className={`whitespace-pre-wrap rounded p-2 text-sm ${t.role === "user" ? "ml-12 bg-zinc-100" : "mr-12 border border-zinc-200"}`}
+                className={`max-w-[85%] whitespace-pre-wrap px-3.5 py-2.5 text-sm leading-relaxed ${
+                  t.role === "user"
+                    ? "self-end rounded-xl rounded-br-sm bg-accent-soft"
+                    : "self-start rounded-xl rounded-bl-sm bg-zinc-100"
+                }`}
               >
                 {t.content}
               </li>
@@ -172,22 +182,18 @@ export function AiPanel({ reviews, onReviewsChange }: Props) {
         )}
         <form onSubmit={sendChat} className="flex gap-2">
           <input
-            className="flex-1 rounded border border-zinc-300 px-2 py-1.5 text-sm"
+            className="h-11 min-w-0 flex-1 rounded-lg border border-zinc-300 px-3 text-sm"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="例: 業種の偏りで気をつけることは?"
             aria-label="質問"
             maxLength={4000}
           />
-          <button type="submit" disabled={busy !== null || !input.trim()} className="rounded bg-zinc-900 px-3 py-1.5 text-sm text-white disabled:opacity-50">
+          <button type="submit" disabled={busy !== null || !input.trim()} className={darkButton}>
             {busy === "chat" ? "回答中…" : "送信"}
           </button>
-          {turns.length > 0 && (
-            <button type="button" onClick={() => setTurns([])} disabled={busy !== null} className="rounded border px-3 py-1.5 text-sm">
-              会話をクリア
-            </button>
-          )}
         </form>
+        <p className="text-xs text-muted">会話は保存されません。</p>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AiPanel } from "./AiPanel";
 import { AllocationChart } from "./AllocationChart";
 import { CsvImport } from "./CsvImport";
@@ -8,8 +8,9 @@ import { applyImport } from "@/lib/rakutenCsv";
 import { HistoryChart } from "./HistoryChart";
 import { HoldingForm } from "./HoldingForm";
 import { HoldingsTable } from "./HoldingsTable";
-import { percent, yen } from "@/lib/format";
-import { summarize } from "@/lib/portfolio";
+import { jstDate, percent, yen } from "@/lib/format";
+import { changeSincePrevious, summarize } from "@/lib/portfolio";
+import { panelClass, pnlTextClass, primaryButton, secondaryButton } from "./ui";
 import type { Holding, PortfolioData } from "@/types/portfolio";
 
 async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
@@ -19,12 +20,16 @@ async function requestJson<T>(url: string, init?: RequestInit): Promise<T> {
   return body as T;
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+/** ヘッダーのボタンで開く入力欄 */
+type Drawer = "csv" | "form" | null;
+
+function StatCard({ label, value, sub, tone }: { label: string; value: string; sub?: string; tone?: string }) {
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-4">
-      <h2 className="mb-3 text-sm font-semibold text-zinc-700">{title}</h2>
-      {children}
-    </section>
+    <div className={`${panelClass} flex flex-col gap-1.5 px-[18px] py-4`}>
+      <p className="text-[13px] text-muted">{label}</p>
+      <p className={`text-2xl font-bold tabular-nums ${tone ?? ""}`}>{value}</p>
+      {sub && <p className={`text-sm tabular-nums ${tone ?? "text-muted"}`}>{sub}</p>}
+    </div>
   );
 }
 
@@ -33,7 +38,9 @@ export function Dashboard() {
   const [error, setError] = useState("");
   const [notices, setNotices] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [drawer, setDrawer] = useState<Drawer>(null);
   const [editing, setEditing] = useState<Holding | null>(null);
+  const drawerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     requestJson<PortfolioData>("/api/portfolio")
@@ -41,7 +48,26 @@ export function Dashboard() {
       .catch((e: Error) => setError(e.message));
   }, []);
 
+  // 表の「編集」で開いたときも、入力欄が見える位置までスクロールする
+  useEffect(() => {
+    if (drawer) drawerRef.current?.scrollIntoView?.({ behavior: "smooth", block: "nearest" });
+  }, [drawer, editing]);
+
   const summary = useMemo(() => summarize(data?.holdings ?? []), [data]);
+  const change = useMemo(
+    () => (data ? changeSincePrevious(data.snapshots, summary.totalValue, jstDate(new Date())) : null),
+    [data, summary.totalValue],
+  );
+
+  function openDrawer(next: Drawer) {
+    setEditing(null);
+    setDrawer((current) => (current === next ? null : next));
+  }
+
+  function closeDrawer() {
+    setEditing(null);
+    setDrawer(null);
+  }
 
   async function saveHoldings(holdings: Holding[]) {
     setBusy(true);
@@ -78,92 +104,138 @@ export function Dashboard() {
   }
 
   if (!data) {
-    return <p className="p-6 text-sm text-zinc-500">{error || "読み込み中…"}</p>;
+    return <p className="p-6 text-sm text-muted">{error || "読み込み中…"}</p>;
   }
 
   const holdings = data.holdings;
+  const lastSnapshot = data.snapshots.at(-1);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4 p-6">
-      <header className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-bold">資産ポートフォリオ</h1>
-        <button
-          type="button"
-          onClick={refresh}
-          disabled={busy}
-          className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-500 disabled:opacity-50"
-        >
-          {busy ? "処理中…" : "価格を更新して記録"}
-        </button>
+    <div className="mx-auto flex max-w-[1360px] flex-col gap-5 px-6 pt-6 pb-16">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <h1 className="text-2xl font-bold">Portfolio</h1>
+          <p className="text-sm text-muted">
+            保有 {holdings.length} 件{lastSnapshot && ` · 最終記録 ${lastSnapshot.date}`}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => openDrawer("csv")} aria-expanded={drawer === "csv"} className={secondaryButton}>
+            CSV を取り込む
+          </button>
+          <button
+            type="button"
+            onClick={() => openDrawer("form")}
+            aria-expanded={drawer === "form" && !editing}
+            className={secondaryButton}
+          >
+            保有を追加
+          </button>
+          <button type="button" onClick={refresh} disabled={busy} className={primaryButton}>
+            {busy ? "処理中…" : "価格を更新して記録"}
+          </button>
+        </div>
       </header>
 
       {error && (
-        <p role="alert" className="rounded bg-red-50 p-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-loss">
           {error}
         </p>
       )}
       {notices.length > 0 && (
-        <ul className="rounded bg-amber-50 p-2 text-sm text-amber-800">
+        <ul className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
           {notices.map((n) => (
             <li key={n}>{n}</li>
           ))}
         </ul>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card title="総資産">
-          <p className="text-2xl font-bold tabular-nums">{yen(summary.totalValue)}</p>
-        </Card>
-        <Card title="評価損益">
-          <p className={`text-2xl font-bold tabular-nums ${summary.pnl < 0 ? "text-red-600" : "text-emerald-700"}`}>
-            {yen(summary.pnl)}
-          </p>
-          <p className="text-sm text-zinc-500">{percent(summary.pnlRate, { signed: true })}</p>
-        </Card>
-        <Card title="銘柄数">
-          <p className="text-2xl font-bold tabular-nums">{holdings.length}</p>
-        </Card>
+      {drawer && (
+        <section ref={drawerRef} className={`${panelClass} space-y-3 p-5`} aria-label={drawer === "csv" ? "CSV の取り込み" : "保有の入力"}>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="text-base font-semibold">
+              {drawer === "csv" ? "楽天証券の CSV を取り込む" : editing ? `編集: ${editing.name}` : "保有を追加"}
+            </h2>
+            <button type="button" onClick={closeDrawer} className="h-9 rounded-md px-3 text-sm text-muted hover:bg-zinc-100">
+              閉じる
+            </button>
+          </div>
+          {drawer === "csv" ? (
+            <CsvImport
+              disabled={busy}
+              onImport={(imported) => {
+                closeDrawer();
+                saveHoldings(applyImport(holdings, imported));
+              }}
+            />
+          ) : (
+            <HoldingForm
+              key={editing?.id ?? "new"}
+              initial={editing ?? undefined}
+              onCancel={closeDrawer}
+              onSubmit={(h) => {
+                const next = editing ? holdings.map((x) => (x.id === h.id ? h : x)) : [...holdings, h];
+                if (editing) closeDrawer();
+                saveHoldings(next);
+              }}
+            />
+          )}
+        </section>
+      )}
+
+      <div className="flex flex-wrap items-start gap-5">
+        <div className="flex min-w-0 flex-[999_1_640px] flex-col gap-4">
+          <section aria-label="要約" className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
+            <StatCard label="総資産" value={yen(summary.totalValue)} />
+            <StatCard
+              label="評価損益"
+              value={percent(summary.pnlRate, { signed: true })}
+              sub={yen(summary.pnl, { signed: true })}
+              tone={pnlTextClass(summary.pnl)}
+            />
+            {change ? (
+              <StatCard
+                label={`前回の記録(${change.date})から`}
+                value={percent(change.rate, { signed: true })}
+                sub={yen(change.diff, { signed: true })}
+                tone={pnlTextClass(change.diff)}
+              />
+            ) : (
+              <StatCard label="前回の記録から" value="—" sub="記録が2日分たまると表示" />
+            )}
+          </section>
+
+          <section className={`${panelClass} flex flex-wrap items-center gap-6 px-6 py-5`}>
+            <div className="space-y-2">
+              <h2 className="text-sm font-semibold">資産配分</h2>
+              <AllocationChart rows={summary.byClass} />
+            </div>
+            <div className="min-w-0 flex-[1_1_280px] space-y-2">
+              <h2 className="text-sm font-semibold">推移</h2>
+              <HistoryChart snapshots={data.snapshots} />
+            </div>
+          </section>
+
+          <section className={`${panelClass} space-y-3 px-6 py-5`}>
+            <h2 className="text-base font-semibold">保有一覧</h2>
+            <HoldingsTable
+              rows={summary.byHolding}
+              onEdit={(h) => {
+                setEditing(h);
+                setDrawer("form");
+              }}
+              onDelete={(h) => {
+                if (window.confirm(`${h.name} を削除しますか?`)) saveHoldings(holdings.filter((x) => x.id !== h.id));
+              }}
+            />
+          </section>
+        </div>
+
+        <aside aria-label="AI による見直し" className={`${panelClass} flex-[1_1_400px] space-y-4 p-5`}>
+          <h2 className="text-base font-semibold">AI による見直し</h2>
+          <AiPanel reviews={data.reviews} onReviewsChange={(reviews) => setData((d) => (d ? { ...d, reviews } : d))} />
+        </aside>
       </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card title="資産配分">
-          <AllocationChart rows={summary.byClass} />
-        </Card>
-        <Card title="推移">
-          <HistoryChart snapshots={data.snapshots} />
-        </Card>
-      </div>
-
-      <Card title="AI による見直し">
-        <AiPanel reviews={data.reviews} onReviewsChange={(reviews) => setData((d) => (d ? { ...d, reviews } : d))} />
-      </Card>
-
-      <Card title="保有一覧">
-        <HoldingsTable
-          rows={summary.byHolding}
-          onEdit={setEditing}
-          onDelete={(h) => {
-            if (window.confirm(`${h.name} を削除しますか?`)) saveHoldings(holdings.filter((x) => x.id !== h.id));
-          }}
-        />
-      </Card>
-
-      <Card title="楽天証券の CSV を取り込む">
-        <CsvImport disabled={busy} onImport={(imported) => saveHoldings(applyImport(holdings, imported))} />
-      </Card>
-
-      <Card title={editing ? `編集: ${editing.name}` : "保有を追加"}>
-        <HoldingForm
-          key={editing?.id ?? "new"}
-          initial={editing ?? undefined}
-          onCancel={editing ? () => setEditing(null) : undefined}
-          onSubmit={(h) => {
-            const next = editing ? holdings.map((x) => (x.id === h.id ? h : x)) : [...holdings, h];
-            setEditing(null);
-            saveHoldings(next);
-          }}
-        />
-      </Card>
     </div>
   );
 }

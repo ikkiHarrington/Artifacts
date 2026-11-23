@@ -1,5 +1,6 @@
 import {
   addReview,
+  changeSincePrevious,
   createHolding,
   marketValue,
   parsePortfolioData,
@@ -151,5 +152,24 @@ describe("見直しレポート", () => {
   it("addReview は先頭に追加し、上限を超えた古いものを捨てる", () => {
     const r = (n: number) => ({ createdAt: String(n), text: String(n) });
     expect(addReview([r(2), r(1)], r(3), 2)).toEqual([r(3), r(2)]);
+  });
+});
+
+describe("changeSincePrevious", () => {
+  const snap = (date: string, totalValue: number) => ({ ...takeSnapshot([], date), totalValue });
+
+  it("今日より前の最新の記録と比べる(今日の記録は使わない)", () => {
+    const snapshots = [snap("2026-11-02", 900), snap("2026-11-16", 1000), snap("2026-11-23", 1100)];
+    expect(changeSincePrevious(snapshots, 1100, "2026-11-23")).toEqual({ date: "2026-11-16", diff: 100, rate: 0.1 });
+  });
+
+  it("並び順に関係なく直前の記録を選ぶ", () => {
+    const snapshots = [snap("2026-11-16", 1000), snap("2026-11-02", 500)];
+    expect(changeSincePrevious(snapshots, 900, "2026-11-23")?.date).toBe("2026-11-16");
+  });
+
+  it("比べる記録がなければ null。前回が 0 円なら増減率は 0", () => {
+    expect(changeSincePrevious([snap("2026-11-23", 1000)], 1000, "2026-11-23")).toBeNull();
+    expect(changeSincePrevious([snap("2026-11-16", 0)], 500, "2026-11-23")).toEqual({ date: "2026-11-16", diff: 500, rate: 0 });
   });
 });

@@ -209,3 +209,21 @@ export function upsertSnapshot(snapshots: Snapshot[], snapshot: Snapshot): Snaps
     a.date.localeCompare(b.date),
   );
 }
+
+export interface Change {
+  /** 比較した記録の日付 */
+  date: string;
+  diff: number;
+  rate: number;
+}
+
+/**
+ * 今日より前の最新の記録と比べた、現在の評価額の増減。比べる記録がなければ null。
+ * 今日の記録は「価格を更新」で現在値と同じになるため、比較には使わない
+ */
+export function changeSincePrevious(snapshots: Snapshot[], totalValue: number, today: string): Change | null {
+  const previous = snapshots.filter((s) => s.date < today).sort((a, b) => a.date.localeCompare(b.date)).at(-1);
+  if (!previous) return null;
+  const diff = totalValue - previous.totalValue;
+  return { date: previous.date, diff, rate: ratio(diff, previous.totalValue) };
+}

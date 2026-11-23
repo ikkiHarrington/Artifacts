@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+/* 画面デザイン(Claude Design の C 案)の配色 */
+@theme {
+  --color-canvas: #f5f6f4;
+  --color-line: #e3e5e8;
+  --color-line-soft: #eef0f2;
+  --color-ink: #1a1c1e;
+  --color-muted: #5f6368;
+  --color-accent: #2457c5;
+  --color-accent-hover: #1a3f91;
+  --color-accent-soft: #e8eefa;
+  --color-gain: #0f6e4f;
+  --color-loss: #b42318;
+}
+
 body {
   font-family: system-ui, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
 }

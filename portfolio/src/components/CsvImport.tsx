@@ -2,6 +2,7 @@
 
 import { useRef, useState, type ChangeEvent } from "react";
 import { decodeShiftJis, parseRakutenCsv, type ImportResult } from "@/lib/rakutenCsv";
+import { darkButton, secondaryButton } from "./ui";
 import { ASSET_CLASS_LABELS, ASSET_CLASSES, type Holding } from "@/types/portfolio";
 
 interface Props {
@@ -42,20 +43,20 @@ export function CsvImport({ onImport, disabled }: Props) {
     : [];
 
   return (
-    <div className="space-y-2 text-sm">
-      <p className="text-xs text-zinc-500">
+    <div className="space-y-3 text-sm">
+      <p className="text-xs leading-relaxed text-muted">
         楽天証券の「保有商品一覧」で保存した CSV(assetbalance(all)_*.csv)を選んでください。前回取り込んだ楽天証券の保有だけを入れ替え、手入力の保有はそのまま残します。
       </p>
       <input ref={inputRef} type="file" accept=".csv,text/csv" onChange={handleFile} disabled={disabled} aria-label="CSV ファイル" />
 
       {error && (
-        <p role="alert" className="rounded bg-red-50 p-2 text-red-700">
+        <p role="alert" className="rounded-lg bg-red-50 p-3 text-loss">
           {error}
         </p>
       )}
 
       {result && (
-        <div className="space-y-2 rounded border border-zinc-200 bg-zinc-50 p-3" aria-label="取り込み内容">
+        <div className="space-y-3 rounded-lg border border-line bg-zinc-50 p-3" aria-label="取り込み内容">
           <p>
             {fileName}: {result.holdings.length} 件(
             {counts.map(([c, n]) => `${ASSET_CLASS_LABELS[c]} ${n}`).join(" / ")})
@@ -75,11 +76,11 @@ export function CsvImport({ onImport, disabled }: Props) {
                 onImport(result.holdings);
                 reset();
               }}
-              className="rounded bg-zinc-900 px-3 py-1.5 text-white disabled:opacity-50"
+              className={darkButton}
             >
               取り込む
             </button>
-            <button type="button" onClick={reset} className="rounded border px-3 py-1.5">
+            <button type="button" onClick={reset} className={secondaryButton}>
               キャンセル
             </button>
           </div>
