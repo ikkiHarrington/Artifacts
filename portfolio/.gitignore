@@ -43,3 +43,6 @@ next-env.d.ts
 # 保有資産データ(秘密情報。コミットしない)
 /data/*
 !/data/.gitkeep
+
+# 起動用 bat のサーバーログ
+/logs/
