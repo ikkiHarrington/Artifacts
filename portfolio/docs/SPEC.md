@@ -316,3 +316,62 @@ sequenceDiagram
     R-->>UI: review / reviews
     UI-->>U: Markdown として描画
 ```
+
+### 10.3 フォルダ構成
+
+テスト(`*.test.ts(x)`)は対象のファイルと同じ場所に置く(一覧では省略)。
+
+```text
+portfolio/
+├─ start-portfolio.bat / stop-portfolio.bat   裏で起動・停止(next start、ログは logs/)
+├─ README.md                 使い方
+├─ docs/
+│  └─ SPEC.md                仕様(このファイル)
+├─ prompts/                  AI へのプロンプト(呼び出しのたびに読む。ビルド不要で編集可)
+│  ├─ system.md
+│  └─ review.md
+├─ data/                     保有データ・取り込んだ CSV(.gitignore 済み。コミットしない)
+├─ logs/                     サーバーログ(.gitignore 済み)
+├─ .env.local                AI_PROVIDER などの設定(.gitignore 済み)
+└─ src/
+   ├─ app/                   App Router
+   │  ├─ layout.tsx / page.tsx / globals.css / icon.svg
+   │  └─ api/                Route Handler(6 章)
+   │     ├─ portfolio/       保有の読み書き
+   │     ├─ prices/refresh/  価格更新とスナップショット
+   │     └─ ai/
+   │        ├─ preview/      送信内容のプレビュー
+   │        ├─ review/       見直しレポート
+   │        └─ chat/         チャット
+   ├─ components/            画面(クライアントコンポーネント)
+   │  ├─ Dashboard.tsx       全体をまとめる
+   │  ├─ HoldingsTable.tsx / HoldingForm.tsx
+   │  ├─ AllocationChart.tsx / HistoryChart.tsx
+   │  ├─ CsvImport.tsx       楽天証券 CSV の取り込み
+   │  ├─ AiPanel.tsx         レポート・チャット
+   │  ├─ Markdown.tsx        AI の回答を React 要素で描画
+   │  ├─ AppIcon.tsx
+   │  └─ ui.ts               共通のクラス(損益の色 pnlTextClass など)
+   ├─ lib/
+   │  ├─ mask.ts             AI に送るデータのマスク
+   │  ├─ ai/                 AI 呼び出し
+   │  │  ├─ index.ts         AI_PROVIDER による切り替え・文脈の組み立て
+   │  │  ├─ claude.ts        Claude API(API キー)
+   │  │  ├─ claudeCode.ts    claude -p(サブスク)
+   │  │  ├─ ollama.ts        スタブ
+   │  │  ├─ prompts.ts       prompts/*.md の読み込みと既定値
+   │  │  └─ types.ts
+   │  ├─ data/               保有データ
+   │  │  ├─ portfolio.ts     検証・集計・スナップショット・履歴
+   │  │  ├─ storage.ts       JSON ファイルへの保存
+   │  │  └─ prices.ts        日本株の現在値の取得
+   │  ├─ import/             CSV の取り込み
+   │  │  ├─ csv.ts           CSV の解析
+   │  │  ├─ rakutenCsv.ts    楽天証券 CSV の変換
+   │  │  └─ rakutenCsv.fixture.ts  テスト用の架空データ
+   │  └─ text/               表示用
+   │     ├─ format.ts        円・%・日付の整形
+   │     └─ markdown.ts      Markdown の解析
+   └─ types/
+      └─ portfolio.ts        データの型
+```
