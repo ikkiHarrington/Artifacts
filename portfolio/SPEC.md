@@ -226,3 +226,93 @@ AI の呼び出しに失敗したときは、利用者向けのメッセージ(A
 - AI を自動で呼び出す仕組み(定期実行など)は追加しない
 - AI に送る内容を変えるときは、`mask.test.ts` の「含まない」テストも更新する
 - テストは PowerShell から実行する(Git Bash から `npx vitest` を実行すると失敗することがある)
+
+## 10. システム構成
+
+### 10.1 全体像
+
+```mermaid
+flowchart TB
+    subgraph Browser["ブラウザ http://127.0.0.1:3001"]
+        UI["React 画面<br/>Dashboard / HoldingsTable / グラフ<br/>CsvImport / AiPanel"]
+    end
+
+    subgraph Server["Next.js サーバー(next start, 127.0.0.1 のみ)"]
+        APIP["/api/portfolio<br/>保有の読み書き"]
+        APIPR["/api/prices/refresh<br/>株価更新"]
+        APIPV["/api/ai/preview<br/>送信内容プレビュー"]
+        APIR["/api/ai/review<br/>レポート作成"]
+        APIC["/api/ai/chat<br/>チャット"]
+
+        CSV["rakutenCsv.ts<br/>楽天証券 CSV 取り込み"]
+        DOM["portfolio.ts<br/>検証・集計・履歴"]
+        ST["storage.ts<br/>JSON 保存(一時ファイル→置換)"]
+        PR["prices.ts<br/>日本株の現在値"]
+        MASK["mask.ts<br/>比率・損益率・指数のみ<br/>(金額・数量・単価・id は送らない)"]
+        PROMPTS["prompts.ts<br/>呼び出しごとに読む"]
+        PROV{"AiProvider<br/>AI_PROVIDER で切替"}
+    end
+
+    subgraph Local["ローカルファイル"]
+        DATA[("data/portfolio.json<br/>保有・推移・レポート履歴<br/>.gitignore 済み")]
+        PMD[("prompts/system.md<br/>prompts/review.md")]
+        ENV[(".env.local<br/>AI_PROVIDER など")]
+    end
+
+    subgraph External["外部"]
+        YF["Yahoo Finance"]
+        API["Claude API<br/>(API キー)"]
+        CC["claude -p<br/>(サブスク・API キーを渡さない)"]
+        OL["Ollama(スタブ)"]
+    end
+
+    UI -->|"CSV 取り込み"| CSV --> APIP
+    UI --> APIP & APIPR & APIPV
+    UI -->|"ボタン操作のみ"| APIR & APIC
+
+    APIP --> DOM --> ST
+    APIPR --> PR -->|"日本株のみ"| YF
+    APIPR --> ST
+    ST <--> DATA
+
+    APIPV --> MASK
+    APIR --> MASK
+    APIC --> MASK
+    APIR & APIC --> PROMPTS <--> PMD
+    MASK --> PROV
+    PROMPTS --> PROV
+    ENV -.-> PROV
+
+    PROV -->|"claude"| API
+    PROV -->|"claude-code"| CC
+    PROV -->|"ollama"| OL
+
+    APIR -->|"保存直前に読み直して履歴に追加"| ST
+```
+
+### 10.2 AI レビューの流れ
+
+```mermaid
+sequenceDiagram
+    actor U as ユーザー
+    participant UI as AiPanel
+    participant R as /api/ai/review
+    participant S as storage.ts
+    participant M as mask.ts
+    participant P as prompts/*.md
+    participant AI as AiProvider
+
+    U->>UI: 「レビュー」ボタン
+    UI->>R: POST { revealNames }
+    R->>S: loadPortfolio()
+    S-->>R: 保有データ
+    R->>M: マスク(比率・損益率・指数)
+    M-->>R: 送信用テキスト
+    R->>P: system.md / review.md を読む
+    R->>AI: complete(system, context + review指示)
+    AI-->>R: Markdown のレポート
+    R->>S: loadPortfolio()(読み直し)
+    R->>S: savePortfolio(レポートを履歴に追加)
+    R-->>UI: review / reviews
+    UI-->>U: Markdown として描画
+```
