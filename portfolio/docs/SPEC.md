@@ -319,7 +319,7 @@ sequenceDiagram
 
 ### 10.3 フォルダ構成
 
-テスト(`*.test.ts(x)`)は対象のファイルと同じ場所に置く(一覧では省略)。
+テスト(`*.test.ts(x)`)は対象のファイルと同じ場所に置く(一覧では省略)。直下の設定ファイルは、各ツール(Next.js・TypeScript・ESLint・Vitest・npm)がプロジェクトのルートから読むため、この階層に置く。
 
 ```text
 portfolio/
@@ -333,6 +333,15 @@ portfolio/
 ├─ data/                     保有データ・取り込んだ CSV(.gitignore 済み。コミットしない)
 ├─ logs/                     サーバーログ(.gitignore 済み)
 ├─ .env.local                AI_PROVIDER などの設定(.gitignore 済み)
+├─ package.json / package-lock.json   依存とスクリプト
+├─ next.config.ts            Next.js の設定
+├─ tsconfig.json             TypeScript の設定(@ エイリアス = src/)
+├─ eslint.config.mjs         ESLint の設定
+├─ vitest.config.mts / vitest.setup.ts   テストの設定と前処理(taskboard と同じ配置)
+├─ AGENTS.md                 Next.js 16 の注意書き(next dev が再生成する。消さない)
+├─ .gitignore / .gitattributes
+├─ next-env.d.ts             自動生成(.gitignore 済み。編集しない)
+├─ tsconfig.tsbuildinfo      自動生成のキャッシュ(.gitignore 済み)
 └─ src/
    ├─ app/                   App Router
    │  ├─ layout.tsx / page.tsx / globals.css / icon.svg
