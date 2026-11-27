@@ -1,6 +1,6 @@
 # 資産レビュー(portfolio)仕様
 
-株式を中心とした個人資産を、ローカルで手動で見直すためのダッシュボード。使い方の手順は [README.md](README.md) を参照。
+株式を中心とした個人資産を、ローカルで手動で見直すためのダッシュボード。使い方の手順は [README.md](../README.md) を参照。
 
 ## 1. 基本方針
 
@@ -222,7 +222,7 @@ AI の呼び出しに失敗したときは、利用者向けのメッセージ(A
 詳細はリポジトリ直下の `CLAUDE.md` を参照。
 
 - 保有データ・CSV(`portfolio/data/`)と `.env.local` はコミットしない
-- 開発作業をする Claude は、ユーザーの実データをマスクした形でも読まない。動作確認は `PORTFOLIO_DATA_PATH` をスクラッチパッドに向け、架空データ(`src/lib/rakutenCsv.fixture.ts` など)だけで行う
+- 開発作業をする Claude は、ユーザーの実データをマスクした形でも読まない。動作確認は `PORTFOLIO_DATA_PATH` をスクラッチパッドに向け、架空データ(`src/lib/import/rakutenCsv.fixture.ts` など)だけで行う
 - AI を自動で呼び出す仕組み(定期実行など)は追加しない
 - AI に送る内容を変えるときは、`mask.test.ts` の「含まない」テストも更新する
 - テストは PowerShell から実行する(Git Bash から `npx vitest` を実行すると失敗することがある)
@@ -244,10 +244,10 @@ flowchart TB
         APIR["/api/ai/review<br/>レポート作成"]
         APIC["/api/ai/chat<br/>チャット"]
 
-        CSV["rakutenCsv.ts<br/>楽天証券 CSV 取り込み"]
-        DOM["portfolio.ts<br/>検証・集計・履歴"]
-        ST["storage.ts<br/>JSON 保存(一時ファイル→置換)"]
-        PR["prices.ts<br/>日本株の現在値"]
+        CSV["import/rakutenCsv.ts<br/>楽天証券 CSV 取り込み"]
+        DOM["data/portfolio.ts<br/>検証・集計・履歴"]
+        ST["data/storage.ts<br/>JSON 保存(一時ファイル→置換)"]
+        PR["data/prices.ts<br/>日本株の現在値"]
         MASK["mask.ts<br/>比率・損益率・指数のみ<br/>(金額・数量・単価・id は送らない)"]
         PROMPTS["prompts.ts<br/>呼び出しごとに読む"]
         PROV{"AiProvider<br/>AI_PROVIDER で切替"}

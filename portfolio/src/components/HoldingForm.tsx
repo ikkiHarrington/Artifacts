@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { createHolding } from "@/lib/portfolio";
+import { createHolding } from "@/lib/data/portfolio";
 import { darkButton, secondaryButton } from "./ui";
 import { ASSET_CLASSES, ASSET_CLASS_LABELS, type AssetClass, type Holding } from "@/types/portfolio";
 

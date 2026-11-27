@@ -1,5 +1,5 @@
 import { parseCsv } from "./csv";
-import { createHolding, marketValue } from "./portfolio";
+import { createHolding, marketValue } from "../data/portfolio";
 import type { AssetClass, Holding } from "@/types/portfolio";
 
 /**

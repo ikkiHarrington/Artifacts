@@ -1,6 +1,6 @@
-import { jstDate } from "@/lib/format";
+import { jstDate } from "@/lib/text/format";
 import { AiError, buildPortfolioContext, getProvider, loadPrompts, parseChatTurns } from "@/lib/ai";
-import { loadPortfolio } from "@/lib/storage";
+import { loadPortfolio } from "@/lib/data/storage";
 
 /** マスク済みのポートフォリオを前提に質問に答える。会話履歴は保存しない */
 export async function POST(request: Request) {

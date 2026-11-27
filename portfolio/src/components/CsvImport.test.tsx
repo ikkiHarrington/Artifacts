@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { CsvImport } from "./CsvImport";
-import { RAKUTEN_CSV_FIXTURE } from "@/lib/rakutenCsv.fixture";
+import { RAKUTEN_CSV_FIXTURE } from "@/lib/import/rakutenCsv.fixture";
 
 // テストでは Shift_JIS のバイト列を作れないので、UTF-8 として読む
-vi.mock("@/lib/rakutenCsv", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/rakutenCsv")>()),
+vi.mock("@/lib/import/rakutenCsv", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/import/rakutenCsv")>()),
   decodeShiftJis: (bytes: Uint8Array) => new TextDecoder("utf-8").decode(bytes),
 }));
 

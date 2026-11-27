@@ -1,6 +1,6 @@
-import { jstDate } from "@/lib/format";
+import { jstDate } from "@/lib/text/format";
 import { AiError, buildPortfolioContext, getProvider, loadPrompts } from "@/lib/ai";
-import { loadPortfolio } from "@/lib/storage";
+import { loadPortfolio } from "@/lib/data/storage";
 
 /** AI に送る内容(マスク済みのデータと、ファイルから読んだプロンプト)をそのまま返す。送信前の確認用 */
 export async function GET(request: Request) {

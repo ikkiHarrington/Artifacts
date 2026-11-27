@@ -1,5 +1,5 @@
 import { Fragment } from "react";
-import { parseInline, parseMarkdown, type Block } from "@/lib/markdown";
+import { parseInline, parseMarkdown, type Block } from "@/lib/text/markdown";
 
 function InlineText({ text }: { text: string }) {
   return (

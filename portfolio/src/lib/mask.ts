@@ -1,4 +1,4 @@
-import { summarize } from "./portfolio";
+import { summarize } from "./data/portfolio";
 import { ASSET_CLASS_LABELS, type Holding, type Snapshot } from "@/types/portfolio";
 
 /**

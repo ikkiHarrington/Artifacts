@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent } from "react";
-import { decodeShiftJis, parseRakutenCsv, type ImportResult } from "@/lib/rakutenCsv";
+import { decodeShiftJis, parseRakutenCsv, type ImportResult } from "@/lib/import/rakutenCsv";
 import { darkButton, secondaryButton } from "./ui";
 import { ASSET_CLASS_LABELS, ASSET_CLASSES, type Holding } from "@/types/portfolio";
 

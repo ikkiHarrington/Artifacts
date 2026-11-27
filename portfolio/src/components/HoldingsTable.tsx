@@ -1,7 +1,7 @@
 "use client";
 
-import { percent, yen } from "@/lib/format";
-import type { HoldingRow } from "@/lib/portfolio";
+import { percent, yen } from "@/lib/text/format";
+import type { HoldingRow } from "@/lib/data/portfolio";
 import { ASSET_CLASS_LABELS, type Holding } from "@/types/portfolio";
 import { pnlTextClass } from "./ui";
 

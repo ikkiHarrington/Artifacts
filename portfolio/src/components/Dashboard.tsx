@@ -5,12 +5,12 @@ import { AiPanel } from "./AiPanel";
 import { AllocationChart } from "./AllocationChart";
 import { AppIcon } from "./AppIcon";
 import { CsvImport } from "./CsvImport";
-import { applyImport } from "@/lib/rakutenCsv";
+import { applyImport } from "@/lib/import/rakutenCsv";
 import { HistoryChart } from "./HistoryChart";
 import { HoldingForm } from "./HoldingForm";
 import { HoldingsTable } from "./HoldingsTable";
-import { jstDate, percent, yen } from "@/lib/format";
-import { changeSincePrevious, summarize } from "@/lib/portfolio";
+import { jstDate, percent, yen } from "@/lib/text/format";
+import { changeSincePrevious, summarize } from "@/lib/data/portfolio";
 import { panelClass, pnlTextClass, primaryButton, secondaryButton } from "./ui";
 import type { Holding, PortfolioData } from "@/types/portfolio";
 

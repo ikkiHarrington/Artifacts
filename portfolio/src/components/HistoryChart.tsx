@@ -1,4 +1,4 @@
-import { yen } from "@/lib/format";
+import { yen } from "@/lib/text/format";
 import type { Snapshot } from "@/types/portfolio";
 
 const W = 600;

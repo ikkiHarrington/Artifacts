@@ -1,7 +1,7 @@
-import { jstDate } from "@/lib/format";
+import { jstDate } from "@/lib/text/format";
 import { AiError, buildPortfolioContext, getProvider, loadPrompts } from "@/lib/ai";
-import { addReview } from "@/lib/portfolio";
-import { loadPortfolio, savePortfolio } from "@/lib/storage";
+import { addReview } from "@/lib/data/portfolio";
+import { loadPortfolio, savePortfolio } from "@/lib/data/storage";
 
 /** マスク済みデータで見直しレポートを作り、履歴に保存する */
 export async function POST(request: Request) {

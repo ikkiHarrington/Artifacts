@@ -1,5 +1,5 @@
-import { createHolding, type HoldingInput } from "@/lib/portfolio";
-import { loadPortfolio, savePortfolio } from "@/lib/storage";
+import { createHolding, type HoldingInput } from "@/lib/data/portfolio";
+import { loadPortfolio, savePortfolio } from "@/lib/data/storage";
 
 export async function GET() {
   try {

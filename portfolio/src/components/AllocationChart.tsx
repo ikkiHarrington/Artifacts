@@ -1,5 +1,5 @@
-import { percent } from "@/lib/format";
-import type { ClassRow } from "@/lib/portfolio";
+import { percent } from "@/lib/text/format";
+import type { ClassRow } from "@/lib/data/portfolio";
 import { ASSET_CLASS_LABELS, type AssetClass } from "@/types/portfolio";
 
 /** 隣り合っても見分けやすいよう、色相だけでなく明るさも変えている */
