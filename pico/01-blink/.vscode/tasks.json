@@ -18,19 +18,6 @@
             }
         },
         {
-            // F5 の前に gdb を一度だけ起動しておく。PC の起動後など、gdb の初回起動は数秒かかることがあり、
-            // Cortex-Debug の待ち時間(5 秒・変更不可)を超えて「Failed to generate gdb commands」になるため。
-            "label": "Warm up GDB",
-            "type": "process",
-            "command": "${command:raspberry-pi-pico.getGDBPath}",
-            "args": ["--version"],
-            "presentation": {
-                "reveal": "silent",
-                "panel": "dedicated"
-            },
-            "problemMatcher": []
-        },
-        {
             "label": "Run Project",
             "type": "process",
             "command": "${env:HOME}/.pico-sdk/picotool/2.3.1/picotool/picotool",
