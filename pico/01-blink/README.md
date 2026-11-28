@@ -41,4 +41,4 @@
 
 - `BLINK_INTERVAL_MS` を変えて、点滅の速さを変える。
 - `printf` を消したとき、`arm-none-eabi-size build/blink.elf` の `text` がどれだけ減るか調べる(printf は意外と大きい)。
-- 次は [02 ボタンと割り込み](../README.md#カリキュラム)。
+- 次は [02 ボタンと割り込み](../02-button/README.md)。
